@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:4000';
+const API_BASE_URL = 'http://119.45.5.226:4000';
 
 function fetchDoctors(params = {}) {
   return new Promise((resolve, reject) => {
