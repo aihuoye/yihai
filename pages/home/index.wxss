@@ -1,0 +1,377 @@
+.page {
+  padding: 40rpx;
+  padding-bottom: 160rpx;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+}
+
+.top-search {
+  margin-bottom: 32rpx;
+}
+
+.banner {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 32rpx;
+}
+
+.banner swiper {
+  height: 220rpx;
+}
+
+.banner-image {
+  width: 100%;
+  height: 220rpx;
+  border-radius: 24rpx;
+}
+
+
+.service-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  grid-gap: 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.service-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  color: #1c2b4d;
+  box-sizing: border-box;
+}
+
+.service-card.main {
+  grid-row: span 2;
+  min-height: 210rpx;
+  flex-direction: column;
+  align-items: flex-start;
+  background: linear-gradient(135deg, #eff4ff, #e2ecff);
+}
+
+.service-grid {
+  grid-template-columns: 2.6fr 2fr;
+}
+
+.service-card.secondary {
+  min-height: 120rpx;
+}
+
+.service-text {
+  max-width: 70%;
+}
+
+.service-text.main-text {
+  max-width: 100%;
+}
+
+.service-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.service-desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: rgba(28, 43, 77, 0.65);
+}
+
+.service-extra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-extra.main-icon {
+  align-self: flex-end;
+  margin-top: auto;
+}
+
+.service-badge {
+  padding: 6rpx 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1664ff;
+  font-size: 24rpx;
+  font-weight: 600;
+  border: 2rpx solid rgba(22, 100, 255, 0.4);
+}
+
+.service-diamond,
+.service-avatar,
+.service-icon,
+.service-medic {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-diamond {
+  background: linear-gradient(135deg, #a5c9ff, #4f8efd);
+  color: #fff;
+  font-size: 40rpx;
+  font-weight: 600;
+  transform: rotate(45deg);
+}
+
+.service-diamond text {
+  transform: rotate(-45deg);
+}
+
+.service-avatar,
+.service-icon,
+.service-medic {
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 34rpx;
+}
+
+.service-icon {
+  font-size: 30rpx;
+  color: #1664ff;
+}
+
+.service-medic {
+  flex-direction: column;
+  padding: 6rpx;
+  background: #ffe9d2;
+  position: relative;
+  overflow: hidden;
+}
+
+.medic-back {
+  position: absolute;
+  width: 58rpx;
+  height: 58rpx;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  transform: translate(10rpx, -6rpx);
+  z-index: 0;
+}
+
+.medic-front {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1;
+}
+
+.medic-hat {
+  width: 42rpx;
+  height: 18rpx;
+  border-radius: 8rpx 8rpx 4rpx 4rpx;
+  background: linear-gradient(135deg, #ffb866, #ffa146);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18rpx;
+}
+
+.medic-head {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: #ffd6a6;
+  margin-top: -8rpx;
+}
+
+.medic-body {
+  width: 48rpx;
+  height: 24rpx;
+  border-radius: 24rpx 24rpx 12rpx 12rpx;
+  background: linear-gradient(135deg, #ffb866, #ffa146);
+  margin-top: -6rpx;
+}
+
+.card-blue {
+  background: linear-gradient(135deg, #e4ecff, #d3e5ff);
+}
+
+.card-cyan {
+  background: linear-gradient(135deg, #e7f4ff, #d9f1ff);
+}
+
+.card-peach {
+  background: linear-gradient(135deg, #fef1e7, #fde4d0);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin: 8rpx 0 24rpx;
+}
+
+.title-dot {
+  width: 8rpx;
+  height: 28rpx;
+  background: #1664ff;
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1c2b4d;
+}
+
+.section-link {
+  margin-left: auto;
+  font-size: 24rpx;
+  color: #8a94a6;
+}
+
+.specialty-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-row-gap: 24rpx;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.specialty-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1c2b4d;
+}
+
+.specialty-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 999rpx;
+  background: #eef3ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+}
+
+.specialty-title {
+  font-size: 24rpx;
+}
+
+.doctor-card {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.doctor-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: #dce8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #0f62fe;
+  font-weight: 600;
+  margin-right: 24rpx;
+  overflow: hidden;
+}
+
+
+.doctor-info {
+  flex: 1;
+}
+
+.doctor-row {
+  display: flex;
+  align-items: center;
+}
+
+.doctor-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-right: 16rpx;
+}
+
+.doctor-title {
+  font-size: 24rpx;
+  color: #8a94a6;
+}
+
+.doctor-meta {
+  font-size: 24rpx;
+  color: #6b7485;
+  margin-top: 6rpx;
+}
+
+.book-btn {
+  border-radius: 999rpx;
+  background: #4f8efd;
+  color: #fff;
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+}
+
+.search-input {
+  flex: 1;
+  padding: 20rpx 24rpx;
+  border: 2rpx solid #e1e6f0;
+  border-radius: 999rpx;
+  background: #f5f7fb;
+}
+
+.search-btn {
+  margin-left: 16rpx;
+  padding: 0 28rpx;
+  background: #0f62fe;
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+}
+
+
+.tabbar-space {
+  height: 120rpx;
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110rpx;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1rpx solid #e6e9ef;
+  box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 22rpx;
+  color: #8a94a6;
+}
+
+.tab-item.active {
+  color: #0f62fe;
+}
+
+.tab-icon {
+  font-size: 32rpx;
+}
+
+.tab-label {
+  margin-top: 6rpx;
+}

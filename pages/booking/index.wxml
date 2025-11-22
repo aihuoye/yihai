@@ -1,0 +1,45 @@
+<view class="page" wx:if="{{doctor}}">
+  <view class="card">
+    <view class="section-title">就诊信息</view>
+    <view class="info-row">医院：{{hospital.name}}</view>
+    <view class="info-row">科室：{{department ? department.name : ''}}</view>
+    <view class="info-row">医生：{{doctor.name}}（{{doctor.title}}）</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">选择日期</view>
+    <view class="date-row">
+      <block wx:for="{{dates}}" wx:key="value">
+        <view class="date-pill {{selectedDate === item.value ? 'active' : ''}}" data-value="{{item.value}}" bindtap="selectDate">{{item.label}}</view>
+      </block>
+    </view>
+    <view class="section-title">选择时间段</view>
+    <view class="slot-row">
+      <block wx:for="{{doctor.slots}}" wx:key="*this">
+        <view class="slot-pill {{selectedSlot === item ? 'active' : ''}}" data-value="{{item}}" bindtap="selectSlot">{{item}}</view>
+      </block>
+    </view>
+  </view>
+
+  <view class="card form">
+    <view class="section-title">就诊人信息</view>
+    <view class="form-item">
+      <text>姓名</text>
+      <input placeholder="请输入真实姓名" value="{{patientName}}" data-field="patientName" bindinput="handleInput" />
+    </view>
+    <view class="form-item">
+      <text>身份证</text>
+      <input placeholder="18位身份证号" value="{{idCard}}" data-field="idCard" bindinput="handleInput" />
+    </view>
+    <view class="form-item">
+      <text>手机号</text>
+      <input placeholder="接收通知的手机号" type="number" value="{{mobile}}" data-field="mobile" bindinput="handleInput" />
+    </view>
+  </view>
+
+  <button class="button-primary submit" bindtap="submit">提交预约</button>
+</view>
+
+<block wx:else>
+  <empty-state text="暂无医生信息" icon="🩺" />
+</block>

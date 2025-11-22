@@ -1,0 +1,38 @@
+<view class="info-page">
+  <view class="hero-card">
+    <image class="hero-banner" src="https://dummyimage.com/600x200/44c3b5/ffffff&text=预约挂号智慧平台" mode="aspectFill" />
+  </view>
+
+  <view class="info-block">
+    <view class="info-row">
+      <view class="info-icon">✔</view>
+      <view class="info-text">营业时间：24小时全天服务</view>
+    </view>
+    <view class="info-row">
+      <view class="tags">
+        <text class="tag">预约挂号</text>
+        <text class="tag">在线咨询</text>
+        <text class="tag">专家门诊</text>
+      </view>
+      <view class="info-text">地址：预约后，客服会进行电话回访确认，请注意来电。</view>
+    </view>
+  </view>
+
+  <view class="service-grid">
+    <block wx:for="{{patientServices}}" wx:key="id">
+      <view class="service-card {{item.theme}}" data-id="{{item.id}}" bindtap="handleServiceTap">
+        <view class="service-title">{{item.title}}</view>
+        <view class="service-desc">{{item.desc}}</view>
+        <view class="service-icon">{{item.icon}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="intro-card">
+    <view class="intro-title">医院简介</view>
+    <view class="intro-text">
+      医点通挂号平台是一家致力于提供全方位、便捷化医疗服务的综合性在线平台。平台核心功能清晰明确，涵盖“预约挂号”、“预约手术”、“预约专家团队”与“合作机构”等几个核心版块，构建了从常规诊疗到专家服务的完整就医通道。
+      对于广大患者及家属而言，这是一个完全免费的信息窗口与便捷工具。通过平台，用户可以快捷查询本地或目标城市的医院详细信息，深度了解各家医院的特色科室与权威专家，特别是名老专家的专业擅长与临床经验。所有信息一目了然，旨在帮助用户打破信息壁垒，做出最明智、最合适的医疗选择，轻松匹配到符合自身需求的优质医疗服务，极大提升了就医效率与体验。
+    </view>
+  </view>
+</view>

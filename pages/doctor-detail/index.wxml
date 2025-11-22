@@ -1,0 +1,50 @@
+<view class="doctor-page" wx:if="{{doctor}}">
+  <view class="profile card">
+    <view class="profile-header">
+      <view class="profile-avatar" style="background: {{doctor.avatarBg || '#cfe2ff'}};">
+        {{doctor.name.slice(0,1)}}
+      </view>
+      <view class="profile-info">
+        <view class="profile-name">{{doctor.name}}</view>
+        <view class="profile-title">{{doctor.title}}</view>
+        <view class="profile-meta">{{doctor.hospitalName}} · {{doctor.departmentName}}</view>
+        <view class="profile-expertise">擅长：{{doctor.expertise}}</view>
+      </view>
+    </view>
+    <view class="profile-desc">【擅长】{{doctor.intro}}</view>
+  </view>
+
+  <view class="card schedule-card">
+    <view class="section-tabs">
+      <view class="tab {{activeSection === 'schedule' ? 'active' : ''}}" data-tab="schedule" bindtap="handleSectionChange">挂号</view>
+      <view class="tab {{activeSection === 'intro' ? 'active' : ''}}" data-tab="intro" bindtap="handleSectionChange">介绍</view>
+    </view>
+
+    <block wx:if="{{activeSection === 'schedule'}}">
+      <block wx:for="{{schedules}}" wx:key="dateText">
+        <view class="schedule-item">
+          <view class="schedule-info">
+            <view class="schedule-date">{{item.dateText}}</view>
+            <view class="schedule-extra">余号 {{item.remain}} · 全天</view>
+          </view>
+          <button class="book-btn" data-date="{{item.dateText}}" bindtap="handleScheduleBooking">预约</button>
+        </view>
+      </block>
+    </block>
+
+    <block wx:else>
+      <view class="intro-section">
+        <view class="intro-item">
+          <view class="intro-title">擅长</view>
+          <view class="intro-text">{{doctor.expertise}}</view>
+        </view>
+        <view class="intro-item">
+          <view class="intro-title">介绍</view>
+          <view class="intro-text">{{doctor.intro}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+<empty-state wx:else text="医生信息不存在" icon="🩺" />

@@ -1,0 +1,112 @@
+<view class="page">
+  <view class="search card top-search">
+    <input
+      class="search-input"
+      placeholder="请输入医生姓名或医院"
+      value="{{searchKeyword}}"
+      bindinput="handleSearchInput"
+      confirm-type="search"
+      bindconfirm="handleSearchConfirm"
+    />
+    <button class="search-btn" bindtap="handleSearchConfirm">搜索</button>
+  </view>
+
+  <view class="banner card">
+    <swiper circular autoplay interval="4000" indicator-dots="true">
+      <block wx:for="{{bannerList}}" wx:key="id">
+        <swiper-item>
+          <image class="banner-image" src="{{item.image}}" mode="aspectFill" />
+        </swiper-item>
+      </block>
+    </swiper>
+  </view>
+
+  <view class="service-grid">
+    <view class="service-card main {{mainAction.theme}}" data-id="{{mainAction.id}}" bindtap="handleActionTap">
+      <view class="service-text main-text">
+        <view class="service-title">{{mainAction.title}}</view>
+        <view class="service-desc">{{mainAction.desc}}</view>
+      </view>
+      <view class="service-extra main-icon">
+        <view wx:if="{{mainAction.iconType === 'diamond'}}" class="service-diamond">
+          <text>＋</text>
+        </view>
+      </view>
+    </view>
+    <block wx:for="{{secondaryActions}}" wx:key="id">
+      <view class="service-card secondary {{item.theme}}" data-id="{{item.id}}" bindtap="handleActionTap">
+        <view class="service-text">
+          <view class="service-title">{{item.title}}</view>
+          <view class="service-desc">{{item.desc}}</view>
+        </view>
+        <view class="service-extra">
+          <view wx:if="{{item.iconType === 'diamond'}}" class="service-diamond">
+            <text>＋</text>
+          </view>
+          <view wx:elif="{{item.iconType === 'medic'}}" class="service-medic">
+            <view class="medic-back"></view>
+            <view class="medic-front">
+              <view class="medic-hat">
+                <text>✚</text>
+              </view>
+              <view class="medic-head"></view>
+              <view class="medic-body"></view>
+            </view>
+          </view>
+          <view wx:elif="{{item.iconType === 'icon'}}" class="service-icon">{{item.iconAvatar}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="section-header">
+    <view class="title-dot"></view>
+    <view class="section-title">专病门诊</view>
+  </view>
+  <view class="specialty-grid">
+    <block wx:for="{{specialtyList}}" wx:key="id">
+      <view class="specialty-item" data-name="{{item.title}}" bindtap="handleSpecialtyTap">
+        <view class="specialty-icon">{{item.icon}}</view>
+        <view class="specialty-title">{{item.title}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="section-header">
+    <view class="title-dot"></view>
+    <view class="section-title">医生推荐</view>
+    <view class="section-link" bindtap="handleDoctorTeam">更多>></view>
+  </view>
+  <block wx:for="{{recommendedDoctors}}" wx:key="name">
+    <view class="doctor-card card">
+      <view class="doctor-avatar" style="background: {{item.avatarBg || '#dce8ff'}};">
+        {{item.avatarText}}
+      </view>
+      <view class="doctor-info">
+        <view class="doctor-row">
+          <text class="doctor-name">{{item.name}}</text>
+          <text class="doctor-title">{{item.title}}</text>
+        </view>
+        <view class="doctor-meta">{{item.hospitalName}} · {{item.departmentName}}</view>
+        <view class="doctor-meta">擅长：{{item.expertise}}</view>
+      </view>
+      <button class="book-btn" data-name="{{item.name}}" bindtap="navToDoctor">预约</button>
+    </view>
+  </block>
+  <view class="tabbar-space"></view>
+</view>
+
+<view class="tabbar">
+  <view class="tab-item active" data-tab="home" bindtap="handleTabTap">
+    <text class="tab-icon">🏠</text>
+    <text class="tab-label">首页</text>
+  </view>
+  <view class="tab-item" data-tab="booking" bindtap="handleTabTap">
+    <text class="tab-icon">➕</text>
+    <text class="tab-label">预约挂号</text>
+  </view>
+  <view class="tab-item" data-tab="mine" bindtap="handleTabTap">
+    <text class="tab-icon">👤</text>
+    <text class="tab-label">我的</text>
+  </view>
+</view>

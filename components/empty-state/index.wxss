@@ -1,0 +1,14 @@
+.empty-state {
+  text-align: center;
+  color: #9da7b8;
+  padding: 40rpx 0;
+}
+
+.icon {
+  font-size: 64rpx;
+}
+
+.text {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+}

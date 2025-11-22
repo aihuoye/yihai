@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>医生管理</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f5f7fb;
+      }
+      h1 {
+        margin-bottom: 16px;
+      }
+      .container {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 12px 32px rgba(30, 60, 114, 0.08);
+      }
+      form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      form label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        color: #3c4556;
+      }
+      form input,
+      form textarea {
+        margin-top: 6px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #d7dce5;
+        font-size: 14px;
+      }
+      form textarea {
+        min-height: 80px;
+        grid-column: span 2;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        grid-column: span 2;
+      }
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 18px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .primary {
+        background: #4f8efd;
+        color: #fff;
+      }
+      .secondary {
+        background: #e9ecf4;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 24px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #eef1f5;
+        padding: 12px 8px;
+        text-align: left;
+      }
+      th {
+        color: #7a8395;
+        font-weight: 500;
+      }
+      .table-actions button {
+        margin-right: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>医生管理</h1>
+      <form id="doctorForm">
+        <input type="hidden" name="id" id="doctorId" />
+        <label>姓名<input name="name" required /></label>
+        <label>头衔<input name="title" /></label>
+        <label>所在医院<input name="hospitalName" /></label>
+        <label>科室<input name="departmentName" /></label>
+        <label>头像颜色<input name="avatarBg" placeholder="#cfe2ff" /></label>
+        <label>擅长<textarea name="expertise"></textarea></label>
+        <label>简介<textarea name="intro"></textarea></label>
+        <div class="actions">
+          <button type="submit" class="primary">保存</button>
+          <button type="button" class="secondary" id="resetBtn">重置</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>头衔</th>
+            <th>医院/科室</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="doctorBody"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const API = '/api';
+      const bodyEl = document.getElementById('doctorBody');
+      const form = document.getElementById('doctorForm');
+      const resetBtn = document.getElementById('resetBtn');
+      let doctors = [];
+
+      function fetchList() {
+        fetch(`${API}/doctors`)
+          .then(res => res.json())
+          .then(data => {
+            doctors = data;
+            render();
+          })
+          .catch(() => alert('无法加载医生列表'));
+      }
+
+      function render() {
+        bodyEl.innerHTML = doctors
+          .map(
+            doctor => `
+          <tr>
+            <td>${doctor.name}</td>
+            <td>${doctor.title || ''}</td>
+            <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
+            <td class="table-actions">
+              <button onclick="editDoctor(${doctor.id})">编辑</button>
+              <button onclick="deleteDoctor(${doctor.id})">删除</button>
+            </td>
+          </tr>`
+          )
+          .join('');
+      }
+
+      window.editDoctor = id => {
+        const doctor = doctors.find(item => item.id === id);
+        if (!doctor) return;
+        form.doctorId.value = doctor.id;
+        form.name.value = doctor.name;
+        form.title.value = doctor.title || '';
+        form.hospitalName.value = doctor.hospitalName || '';
+        form.departmentName.value = doctor.departmentName || '';
+        form.avatarBg.value = doctor.avatarBg || '#cfe2ff';
+        form.expertise.value = doctor.expertise || '';
+        form.intro.value = doctor.intro || '';
+      };
+
+      window.deleteDoctor = id => {
+        if (!confirm('确定删除该医生吗？')) return;
+        fetch(`${API}/admin/doctors/${id}`, { method: 'DELETE' })
+          .then(res => {
+            if (res.ok) {
+              doctors = doctors.filter(item => item.id !== id);
+              render();
+            } else {
+              alert('删除失败');
+            }
+          })
+          .catch(() => alert('删除失败'));
+      };
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        const method = payload.id ? 'PUT' : 'POST';
+        const url = payload.id ? `${API}/admin/doctors/${payload.id}` : `${API}/admin/doctors`;
+        fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+          .then(res => res.json())
+          .then(result => {
+            if (payload.id) {
+              doctors = doctors.map(item => (item.id === result.id ? result : item));
+            } else {
+              doctors.push(result);
+            }
+            resetForm();
+            render();
+          })
+          .catch(() => alert('保存失败'));
+      });
+
+      function resetForm() {
+        form.reset();
+        form.doctorId.value = '';
+      }
+
+      resetBtn.addEventListener('click', resetForm);
+
+      fetchList();
+    </script>
+  </body>
+</html>

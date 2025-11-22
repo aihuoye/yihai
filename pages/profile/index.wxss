@@ -1,0 +1,146 @@
+.mine-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #b7dbff, #ffffff 50%);
+  padding: 32rpx;
+}
+
+.hero {
+  background: linear-gradient(135deg, #6fb4ff, #4f8efd);
+  border-radius: 32rpx;
+  padding: 40rpx;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  box-shadow: 0 12rpx 32rpx rgba(15, 65, 140, 0.15);
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60rpx;
+  margin-right: 24rpx;
+}
+
+.hero-info {
+  flex: 1;
+}
+
+.hero-name {
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.hero-desc {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  opacity: 0.85;
+}
+
+.service-card {
+  margin-top: 32rpx;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 32rpx rgba(15, 65, 140, 0.1);
+}
+
+.service-title {
+  display: flex;
+  align-items: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1c2b4d;
+}
+
+.title-dot {
+  width: 8rpx;
+  height: 28rpx;
+  background: #0f62fe;
+  border-radius: 4rpx;
+  margin-right: 16rpx;
+}
+
+.service-actions {
+  display: flex;
+  margin-top: 32rpx;
+  justify-content: space-between;
+}
+
+.service-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1c2b4d;
+}
+
+.service-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #a5c9ff, #4f8efd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.service-text {
+  font-size: 28rpx;
+}
+
+.hero-btn {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.hero-btn::after {
+  display: none;
+}
+
+.tabbar-space {
+  height: 120rpx;
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110rpx;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1rpx solid #e6e9ef;
+  box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 22rpx;
+  color: #8a94a6;
+}
+
+.tab-item.active {
+  color: #0f62fe;
+}
+
+.tab-icon {
+  font-size: 32rpx;
+}
+
+.tab-label {
+  margin-top: 6rpx;
+}

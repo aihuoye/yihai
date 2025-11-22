@@ -1,0 +1,43 @@
+<view class="mine-page">
+  <button class="hero-btn" open-type="getPhoneNumber" bindgetphonenumber="handleGetPhoneNumber" hover-class="none">
+    <view class="hero">
+      <view class="avatar">👤</view>
+      <view class="hero-info">
+        <view class="hero-name">{{userName}}</view>
+        <view class="hero-desc">{{phoneAuthorized ? '手机号已授权，用于就诊通知' : '点击头像授权手机号'}}</view>
+      </view>
+    </view>
+  </button>
+
+  <view class="service-card">
+    <view class="service-title">
+      <view class="title-dot"></view>
+      <text>就医服务</text>
+    </view>
+    <view class="service-actions">
+      <block wx:for="{{services}}" wx:key="id">
+        <view class="service-item" data-id="{{item.id}}" bindtap="handleServiceTap">
+          <view class="service-icon">{{item.icon}}</view>
+          <view class="service-text">{{item.title}}</view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="tabbar-space"></view>
+</view>
+
+<view class="tabbar">
+  <view class="tab-item" data-tab="home" bindtap="handleTabTap">
+    <text class="tab-icon">🏠</text>
+    <text class="tab-label">首页</text>
+  </view>
+  <view class="tab-item" data-tab="booking" bindtap="handleTabTap">
+    <text class="tab-icon">➕</text>
+    <text class="tab-label">预约挂号</text>
+  </view>
+  <view class="tab-item active" data-tab="mine" bindtap="handleTabTap">
+    <text class="tab-icon">👤</text>
+    <text class="tab-label">我的</text>
+  </view>
+</view>

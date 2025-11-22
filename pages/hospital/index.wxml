@@ -1,0 +1,53 @@
+<view wx:if="{{hospital}}" class="page">
+  <view class="hospital-hero card">
+    <view class="title-row">
+      <view>
+        <view class="name">{{hospital.name}}</view>
+        <view class="level">{{hospital.level}}</view>
+      </view>
+      <button class="favorite-btn" bindtap="toggleFavorite">
+        {{favorites.indexOf(hospital.id) > -1 ? '★ 已关注' : '☆ 关注'}}
+      </button>
+    </view>
+    <view class="address">地址：{{hospital.address}}</view>
+    <view class="tags">
+      <text wx:for="{{hospital.tags}}" wx:key="*this" class="tag">{{item}}</text>
+    </view>
+  </view>
+
+  <view class="section-title">选择科室</view>
+  <scroll-view scroll-x="true" class="dept-tabs">
+    <block wx:for="{{hospital.departments}}" wx:key="id">
+      <view
+        class="dept-tab {{selectedDeptId === item.id ? 'active' : ''}}"
+        bindtap="selectDepartment"
+        data-id="{{item.id}}"
+      >
+        <view class="dept-name">{{item.name}}</view>
+        <view class="dept-desc">{{item.desc}}</view>
+      </view>
+    </block>
+  </scroll-view>
+
+  <view class="section-title">可预约医生</view>
+  <block wx:for="{{hospital.departments}}" wx:key="id">
+    <block wx:if="{{item.id === selectedDeptId}}">
+      <block wx:for="{{item.doctors}}" wx:key="id">
+        <view class="doctor card">
+          <view>
+            <view class="doctor-name">{{item.name}}</view>
+            <view class="doctor-meta">{{item.title}} · 专长：{{item.expertise}}</view>
+            <view class="slots">
+              <text wx:for="{{item.slots}}" wx:key="*this" class="slot">{{item}}</text>
+            </view>
+          </view>
+          <button class="button-primary" data-doctor-id="{{item.id}}" bindtap="goBooking">预约</button>
+        </view>
+      </block>
+    </block>
+  </block>
+</view>
+
+<block wx:else>
+  <empty-state text="数据加载中..." icon="⌛" />
+</block>

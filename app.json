@@ -1,0 +1,19 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/tab-booking/index",
+    "pages/doctor-detail/index",
+    "pages/date-booking/index",
+    "pages/doctor-team/index",
+    "pages/hospital-info/index",
+    "pages/hospital/index",
+    "pages/booking/index",
+    "pages/profile/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "涛哥的医院预约挂号",
+    "navigationBarBackgroundColor": "#0f62fe",
+    "navigationBarTextStyle": "white",
+    "backgroundTextStyle": "light"
+  }
+}

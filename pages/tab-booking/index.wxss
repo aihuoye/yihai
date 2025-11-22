@@ -1,0 +1,243 @@
+.booking-page {
+  min-height: 100vh;
+  background: #eaf3ff;
+  padding: 32rpx;
+  padding-bottom: 160rpx;
+}
+
+.switch-tabs {
+  display: flex;
+  border-radius: 28rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 32rpx rgba(14, 59, 122, 0.1);
+}
+
+.switch-tab {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+  color: #7d8798;
+}
+
+.switch-tab.active {
+  background: linear-gradient(135deg, #4f8efd, #6ec1ff);
+  color: #fff;
+  font-weight: 600;
+}
+
+.card {
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 8rpx 0;
+  box-shadow: 0 12rpx 32rpx rgba(20, 60, 120, 0.08);
+}
+
+.calendar {
+  padding: 32rpx;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 32rpx;
+  color: #1c2b4d;
+}
+
+.week-row,
+.day-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-top: 16rpx;
+}
+
+.week-row text {
+  color: #8a94a6;
+  font-size: 26rpx;
+}
+
+.day-item {
+  width: 72rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 20rpx;
+  margin: 0 auto;
+  font-size: 28rpx;
+  color: #1c2b4d;
+}
+
+.day-item.active {
+  background: linear-gradient(135deg, #6fa8ff, #4f8efd);
+  color: #fff;
+  font-weight: 600;
+}
+
+.doctor-list {
+  margin-top: 24rpx;
+}
+
+.doctor-search {
+  margin-bottom: 16rpx;
+  padding: 24rpx 32rpx;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f5f7fb;
+  border-radius: 999rpx;
+  padding: 0 16rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 20rpx;
+}
+
+.search-btn {
+  background: #4f8efd;
+  color: #fff;
+  border-radius: 999rpx;
+  padding: 0 32rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  font-size: 26rpx;
+}
+
+.doctor-card {
+  display: flex;
+  padding: 32rpx;
+  background: #fff;
+  border-radius: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 10rpx 32rpx rgba(14, 59, 122, 0.08);
+}
+
+.doctor-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 999rpx;
+  background: #cfe2ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #fff;
+  margin-right: 24rpx;
+  overflow: hidden;
+}
+
+
+.doctor-content {
+  flex: 1;
+}
+
+.doctor-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+}
+
+.doctor-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.doctor-name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.doctor-title {
+  font-size: 26rpx;
+  color: #8a94a6;
+  margin-top: 6rpx;
+}
+
+.doctor-meta {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #1c2b4d;
+}
+
+.doctor-intro {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6b7485;
+}
+
+.book-btn {
+  border-radius: 999rpx;
+  background: #4f8efd;
+  color: #fff;
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+  margin-left: auto;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 40rpx;
+  border-bottom: 1rpx solid #f0f2f5;
+  font-size: 30rpx;
+  color: #1c2b4d;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.arrow {
+  font-size: 36rpx;
+  color: #8a94a6;
+}
+
+.tabbar-space {
+  height: 120rpx;
+}
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110rpx;
+  background: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1rpx solid #e6e9ef;
+  box-shadow: 0 -8rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 22rpx;
+  color: #8a94a6;
+}
+
+.tab-item.active {
+  color: #0f62fe;
+}
+
+.tab-icon {
+  font-size: 32rpx;
+}
+
+.tab-label {
+  margin-top: 6rpx;
+}

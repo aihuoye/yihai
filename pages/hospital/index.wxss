@@ -1,0 +1,89 @@
+.page {
+  padding: 40rpx;
+}
+
+.title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.name {
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.level,
+.address {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #6b7485;
+}
+
+.favorite-btn {
+  border-radius: 999rpx;
+  border: 2rpx solid #0f62fe;
+  color: #0f62fe;
+  font-size: 26rpx;
+}
+
+.dept-tabs {
+  white-space: nowrap;
+}
+
+.dept-tab {
+  display: inline-block;
+  width: 420rpx;
+  margin-right: 24rpx;
+  padding: 24rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(8, 54, 110, 0.08);
+}
+
+.dept-tab.active {
+  border: 2rpx solid #0f62fe;
+}
+
+.dept-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.dept-desc {
+  font-size: 24rpx;
+  color: #6b7485;
+  margin-top: 8rpx;
+}
+
+.doctor {
+  margin-bottom: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doctor-name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.doctor-meta {
+  font-size: 24rpx;
+  color: #6b7485;
+  margin: 8rpx 0;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.slot {
+  background: #f2f5ff;
+  color: #0f62fe;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  margin: 6rpx 12rpx 0 0;
+  font-size: 24rpx;
+}

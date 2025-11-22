@@ -1,0 +1,66 @@
+<view class="date-page">
+  <view class="dept-banner">
+    <view class="dept-title">{{deptName || '预约挂号'}}</view>
+    <view class="dept-desc">按日期选择号源</view>
+  </view>
+
+  <view class="calendar card">
+    <view class="calendar-header">
+      <text class="arrow" bindtap="prevMonth">‹</text>
+      <text class="month">{{currentMonth}}</text>
+      <text class="arrow" bindtap="nextMonth">›</text>
+    </view>
+    <view class="week-row">
+      <text wx:for="{{weekDays}}" wx:key="*this">{{item}}</text>
+    </view>
+    <view class="day-row">
+      <block wx:for="{{calendarDays}}" wx:key="full">
+        <view
+          class="day-item {{index === selectedDayIndex ? 'active' : ''}}"
+          data-index="{{index}}"
+          bindtap="handleDaySelect"
+        >
+          {{item.label}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="doctor-list">
+    <block wx:for="{{doctorList}}" wx:key="name">
+      <view class="doctor-card">
+        <view class="doctor-avatar" style="background: {{item.avatarBg || '#cfe2ff'}};">
+          {{item.name.slice(0,1)}}
+        </view>
+        <view class="doctor-content">
+          <view class="doctor-header">
+            <view class="doctor-info">
+              <view class="doctor-name">{{item.name}}</view>
+              <view class="doctor-title">{{item.title}}</view>
+            </view>
+            <button class="book-btn" data-name="{{item.name}}" bindtap="goBooking">预约</button>
+          </view>
+          <view class="doctor-meta">{{item.expertise}}</view>
+          <view class="doctor-intro">【擅长】{{item.intro}}</view>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="tabbar-space"></view>
+</view>
+
+<view class="tabbar">
+  <view class="tab-item" data-tab="home" bindtap="handleTabTap">
+    <text class="tab-icon">🏠</text>
+    <text class="tab-label">首页</text>
+  </view>
+  <view class="tab-item active" data-tab="booking" bindtap="handleTabTap">
+    <text class="tab-icon">➕</text>
+    <text class="tab-label">预约挂号</text>
+  </view>
+  <view class="tab-item" data-tab="mine" bindtap="handleTabTap">
+    <text class="tab-icon">👤</text>
+    <text class="tab-label">我的</text>
+  </view>
+</view>

@@ -1,0 +1,94 @@
+.team-page {
+  min-height: 100vh;
+  background: #eaf3ff;
+  padding: 32rpx;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 999rpx;
+  padding: 8rpx 16rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 12rpx 32rpx rgba(14, 59, 122, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  padding: 10rpx 20rpx;
+}
+
+.search-btn {
+  border-radius: 999rpx;
+  background: #4f8efd;
+  color: #fff;
+  padding: 0 28rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  font-size: 26rpx;
+}
+
+.doctor-card {
+  display: flex;
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 12rpx 32rpx rgba(14, 59, 122, 0.08);
+}
+
+.doctor-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #fff;
+  margin-right: 24rpx;
+}
+
+.doctor-content {
+  flex: 1;
+}
+
+.doctor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doctor-name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.doctor-title {
+  font-size: 26rpx;
+  color: #8a94a6;
+  margin-top: 6rpx;
+}
+
+.doctor-meta {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: #1c2b4d;
+}
+
+.doctor-intro {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #6b7485;
+}
+
+.book-btn {
+  border-radius: 999rpx;
+  background: #4f8efd;
+  color: #fff;
+  padding: 0 32rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+}

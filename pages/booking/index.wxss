@@ -1,0 +1,53 @@
+.page {
+  padding: 32rpx;
+}
+
+.info-row {
+  font-size: 26rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.date-row,
+.slot-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.date-pill,
+.slot-pill {
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #e1e6f0;
+  margin: 8rpx 16rpx 8rpx 0;
+  font-size: 26rpx;
+}
+
+.date-pill.active,
+.slot-pill.active {
+  border-color: #0f62fe;
+  color: #0f62fe;
+  background: #edf3ff;
+}
+
+.form-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  font-size: 28rpx;
+}
+
+.form-item text {
+  width: 160rpx;
+  color: #6b7485;
+}
+
+.form-item input {
+  flex: 1;
+  text-align: right;
+}
+
+.submit {
+  margin: 32rpx;
+}
