@@ -1,5 +1,6 @@
 const app = getApp();
 const { onDoctorsReady } = require('../../utils/doctorHelper');
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 Page({
   data: {
@@ -25,7 +26,8 @@ Page({
       { id: 'reproductive', title: '生殖感染', icon: '🧻' },
       { id: 'others', title: '其他疾病', icon: '➕' }
     ],
-    recommendedDoctors: []
+    recommendedDoctors: [],
+    defaultAvatar: DEFAULT_AVATAR
   },
 
   onLoad() {
@@ -40,10 +42,7 @@ Page({
 
   prepareDoctors() {
     onDoctorsReady(doctors => {
-      const next = doctors.slice(0, 4).map(doctor => ({
-        ...doctor,
-        avatarText: doctor.name.slice(0, 1)
-      }));
+      const next = doctors.slice(0, 4);
       this.setData({ recommendedDoctors: next });
     });
   },

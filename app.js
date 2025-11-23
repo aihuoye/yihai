@@ -1,5 +1,6 @@
 const { hospitals, featuredDoctors } = require('./utils/mockData');
 const { fetchDoctors } = require('./utils/api');
+const { DEFAULT_AVATAR } = require('./utils/constants');
 
 App({
   onLaunch() {
@@ -30,7 +31,7 @@ App({
   setDoctors(doctors) {
     this.globalData.doctors = doctors.map(doctor => ({
       ...doctor,
-      avatarBg: doctor.avatarBg || '#cfe2ff'
+      avatarImage: doctor.avatarImage || DEFAULT_AVATAR
     }));
     (this.doctorReadyCallbacks || []).forEach(cb => typeof cb === 'function' && cb(this.globalData.doctors));
     this.doctorReadyCallbacks = [];

@@ -1,4 +1,5 @@
 const { onDoctorsReady } = require('../../utils/doctorHelper');
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 const buildSchedule = () => {
   const result = [];
@@ -20,7 +21,8 @@ Page({
   data: {
     doctor: null,
     schedules: [],
-    activeSection: 'schedule'
+    activeSection: 'schedule',
+    defaultAvatar: DEFAULT_AVATAR
   },
 
   onLoad(options) {

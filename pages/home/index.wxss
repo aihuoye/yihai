@@ -272,15 +272,11 @@
   width: 96rpx;
   height: 96rpx;
   border-radius: 999rpx;
-  background: #dce8ff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
-  color: #0f62fe;
-  font-weight: 600;
+  border: 1rpx solid #e0e6f6;
+  background: #f4f6fb;
   margin-right: 24rpx;
   overflow: hidden;
+  object-fit: cover;
 }
 
 

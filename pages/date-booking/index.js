@@ -1,4 +1,5 @@
 const { onDoctorsReady } = require('../../utils/doctorHelper');
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 const today = new Date();
 
@@ -27,7 +28,8 @@ Page({
     weekDays: ['日', '一', '二', '三', '四', '五', '六'],
     calendarDays: buildCalendar(today),
     selectedDayIndex: today.getDay(),
-    doctorList: []
+    doctorList: [],
+    defaultAvatar: DEFAULT_AVATAR
   },
 
   onLoad(options) {

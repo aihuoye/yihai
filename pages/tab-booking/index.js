@@ -1,4 +1,5 @@
 const { onDoctorsReady } = require('../../utils/doctorHelper');
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 const today = new Date();
 
@@ -35,7 +36,8 @@ Page({
     selectedDayIndex: today.getDay(),
     doctorList: [],
     searchKeyword: '',
-    filteredDoctors: []
+    filteredDoctors: [],
+    defaultAvatar: DEFAULT_AVATAR
   },
 
   onLoad() {

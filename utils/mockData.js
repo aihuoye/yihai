@@ -1,3 +1,5 @@
+const { DEFAULT_AVATAR } = require('./constants');
+
 const departments = [
   {
     id: 'internal',
@@ -53,7 +55,7 @@ const featuredDoctors = [
     hospitalId: 'h1',
     hospitalName: '市第一人民医院',
     departmentName: '男科门诊',
-    avatarBg: '#7fa6ff'
+    avatarImage: DEFAULT_AVATAR
   },
   {
     name: '韦峰',
@@ -63,7 +65,7 @@ const featuredDoctors = [
     hospitalId: 'h1',
     hospitalName: '市第一人民医院',
     departmentName: '泌尿外科',
-    avatarBg: '#ffb870'
+    avatarImage: DEFAULT_AVATAR
   },
   {
     name: '王修伟',
@@ -73,7 +75,7 @@ const featuredDoctors = [
     hospitalId: 'h2',
     hospitalName: '和康中医院',
     departmentName: '专家门诊',
-    avatarBg: '#7bdcb5'
+    avatarImage: DEFAULT_AVATAR
   },
   {
     name: '王晓贺',
@@ -83,7 +85,7 @@ const featuredDoctors = [
     hospitalId: 'h2',
     hospitalName: '和康中医院',
     departmentName: '男性专病门诊',
-    avatarBg: '#f29ec2'
+    avatarImage: DEFAULT_AVATAR
   }
 ];
 

@@ -1,10 +1,8 @@
 <view class="doctor-page" wx:if="{{doctor}}">
   <view class="profile card">
-    <view class="profile-header">
-      <view class="profile-avatar" style="background: {{doctor.avatarBg || '#cfe2ff'}};">
-        {{doctor.name.slice(0,1)}}
-      </view>
-      <view class="profile-info">
+      <view class="profile-header">
+        <image class="profile-avatar" src="{{doctor.avatarImage || defaultAvatar}}" mode="aspectFill" />
+        <view class="profile-info">
         <view class="profile-name">{{doctor.name}}</view>
         <view class="profile-title">{{doctor.title}}</view>
         <view class="profile-meta">{{doctor.hospitalName}} · {{doctor.departmentName}}</view>

@@ -81,6 +81,26 @@
       .table-actions button {
         margin-right: 8px;
       }
+      .avatar-field {
+        grid-column: span 2;
+      }
+      .avatar-upload {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 6px;
+      }
+      .avatar-preview {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 1px solid #d7dce5;
+        background: #f5f7fb;
+        object-fit: cover;
+      }
+      .avatar-field input[type='file'] {
+        flex: 1;
+      }
     </style>
   </head>
   <body>
@@ -92,7 +112,14 @@
         <label>头衔<input name="title" /></label>
         <label>所在医院<input name="hospitalName" /></label>
         <label>科室<input name="departmentName" /></label>
-        <label>头像颜色<input name="avatarBg" placeholder="#cfe2ff" /></label>
+        <label class="avatar-field">
+          <span>头像</span>
+          <div class="avatar-upload">
+            <img id="avatarPreview" class="avatar-preview" src="public-sample-avatar.png" alt="头像预览" />
+            <input type="file" id="avatarInput" accept="image/*" />
+          </div>
+          <input type="hidden" name="avatarImage" id="avatarImage" />
+        </label>
         <label>擅长<textarea name="expertise"></textarea></label>
         <label>简介<textarea name="intro"></textarea></label>
         <div class="actions">
@@ -119,7 +146,17 @@
       const bodyEl = document.getElementById('doctorBody');
       const form = document.getElementById('doctorForm');
       const resetBtn = document.getElementById('resetBtn');
+      const avatarInput = document.getElementById('avatarInput');
+      const avatarPreview = document.getElementById('avatarPreview');
+      const avatarImageField = document.getElementById('avatarImage');
+      const defaultAvatarSrc = 'public-sample-avatar.png';
       let doctors = [];
+
+      function setAvatar(value) {
+        const next = value || '';
+        avatarImageField.value = next;
+        avatarPreview.src = next || defaultAvatarSrc;
+      }
 
       function fetchList() {
         fetch(`${API}/doctors`)
@@ -156,9 +193,10 @@
         form.title.value = doctor.title || '';
         form.hospitalName.value = doctor.hospitalName || '';
         form.departmentName.value = doctor.departmentName || '';
-        form.avatarBg.value = doctor.avatarBg || '#cfe2ff';
+        setAvatar(doctor.avatarImage || '');
         form.expertise.value = doctor.expertise || '';
         form.intro.value = doctor.intro || '';
+        avatarInput.value = '';
       };
 
       window.deleteDoctor = id => {
@@ -202,10 +240,22 @@
       function resetForm() {
         form.reset();
         form.doctorId.value = '';
+        setAvatar('');
+        avatarInput.value = '';
       }
 
-      resetBtn.addEventListener('click', resetForm);
+      avatarInput.addEventListener('change', event => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          setAvatar(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
 
+      resetBtn.addEventListener('click', resetForm);
+      setAvatar('');
       fetchList();
     </script>
   </body>

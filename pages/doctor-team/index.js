@@ -1,9 +1,11 @@
 const { onDoctorsReady } = require('../../utils/doctorHelper');
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 Page({
   data: {
     searchKeyword: '',
-    doctors: []
+    doctors: [],
+    defaultAvatar: DEFAULT_AVATAR
   },
 
   onLoad() {

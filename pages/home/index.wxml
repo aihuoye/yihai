@@ -79,9 +79,7 @@
   </view>
   <block wx:for="{{recommendedDoctors}}" wx:key="name">
     <view class="doctor-card card">
-      <view class="doctor-avatar" style="background: {{item.avatarBg || '#dce8ff'}};">
-        {{item.avatarText}}
-      </view>
+      <image class="doctor-avatar" src="{{item.avatarImage || defaultAvatar}}" mode="aspectFill" />
       <view class="doctor-info">
         <view class="doctor-row">
           <text class="doctor-name">{{item.name}}</text>

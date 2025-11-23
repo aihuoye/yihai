@@ -6,7 +6,7 @@
 
   <block wx:for="{{doctors}}" wx:key="name">
     <view class="doctor-card">
-      <view class="doctor-avatar" style="background: {{item.avatarBg || '#cfe2ff'}}">{{item.name.slice(0,1)}}</view>
+      <image class="doctor-avatar" src="{{item.avatarImage || defaultAvatar}}" mode="aspectFill" />
       <view class="doctor-content">
         <view class="doctor-header">
           <view>
