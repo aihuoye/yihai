@@ -76,6 +76,7 @@ const mapDoctorSummaryRow = row => ({
 });
 
 app.get('/api/doctors', async (req, res) => {
+  const start = Date.now();
   try {
     const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
     const summary = req.query.summary === '1';
@@ -85,11 +86,23 @@ app.get('/api/doctors', async (req, res) => {
       sql += ' WHERE name LIKE ? OR expertise LIKE ?';
       params.push(keyword, keyword);
     }
+    const dbStart = Date.now();
     const [rows] = await pool.query(sql, params);
+    const dbElapsed = Date.now() - dbStart;
     const mapper = summary ? mapDoctorSummaryRow : mapDoctorRow;
-    res.json(rows.map(mapper));
+    const payload = rows.map(mapper);
+    const totalElapsed = Date.now() - start;
+    console.log(
+      '[api/doctors]',
+      `summary=${summary ? '1' : '0'}`,
+      `rows=${rows.length}`,
+      `db=${dbElapsed}ms`,
+      `total=${totalElapsed}ms`
+    );
+    res.json(payload);
   } catch (error) {
-    console.error('Failed to query doctors', error);
+    const totalElapsed = Date.now() - start;
+    console.error('Failed to query doctors', { elapsed: totalElapsed, error });
     res.status(500).json({ message: 'Failed to load doctors' });
   }
 });
