@@ -78,6 +78,14 @@
         color: #7a8395;
         font-weight: 500;
       }
+      .table-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #eef1f5;
+        object-fit: cover;
+        background: #f5f7fb;
+      }
       .table-actions button {
         margin-right: 8px;
       }
@@ -132,6 +140,7 @@
         <thead>
           <tr>
             <th>姓名</th>
+            <th>医生头像</th>
             <th>头衔</th>
             <th>医院/科室</th>
             <th>操作</th>
@@ -174,6 +183,13 @@
             doctor => `
           <tr>
             <td>${doctor.name}</td>
+            <td>
+              <img
+                class="table-avatar"
+                src="${doctor.avatarImage || defaultAvatarSrc}"
+                alt="${doctor.name}头像"
+              />
+            </td>
             <td>${doctor.title || ''}</td>
             <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
             <td class="table-actions">
