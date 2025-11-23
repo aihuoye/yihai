@@ -63,9 +63,22 @@ const mapDoctorRow = row => ({
   avatarImage: getAvatarBase64(row.avatar_image)
 });
 
+const mapDoctorSummaryRow = row => ({
+  id: row.id,
+  name: row.name,
+  title: row.title,
+  expertise: row.expertise,
+  intro: row.intro,
+  hospitalId: row.hospital_id,
+  hospitalName: row.hospital_name,
+  departmentName: row.department_name,
+  hasAvatar: !!row.avatar_image
+});
+
 app.get('/api/doctors', async (req, res) => {
   try {
     const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
+    const summary = req.query.summary === '1';
     let sql = 'SELECT * FROM doctors';
     const params = [];
     if (keyword) {
@@ -73,10 +86,36 @@ app.get('/api/doctors', async (req, res) => {
       params.push(keyword, keyword);
     }
     const [rows] = await pool.query(sql, params);
-    res.json(rows.map(mapDoctorRow));
+    const mapper = summary ? mapDoctorSummaryRow : mapDoctorRow;
+    res.json(rows.map(mapper));
   } catch (error) {
     console.error('Failed to query doctors', error);
     res.status(500).json({ message: 'Failed to load doctors' });
+  }
+});
+
+app.get('/api/doctors/:id/avatar', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT avatar_image FROM doctors WHERE id = ?', [req.params.id]);
+    let base64 = '';
+    if (!rows.length || !rows[0].avatar_image) {
+      base64 = defaultAvatarBase64;
+    } else if (typeof rows[0].avatar_image === 'string') {
+      base64 = rows[0].avatar_image.trim();
+    } else if (Buffer.isBuffer(rows[0].avatar_image)) {
+      base64 = rows[0].avatar_image.toString('base64');
+    }
+    if (!base64) {
+      res.status(404).end();
+      return;
+    }
+    const buffer = Buffer.from(base64, 'base64');
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    res.send(buffer);
+  } catch (error) {
+    console.error('Failed to load avatar', error);
+    res.status(500).json({ message: 'Failed to load avatar' });
   }
 });
 

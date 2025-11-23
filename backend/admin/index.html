@@ -169,8 +169,16 @@
         avatarPreview.src = next || defaultAvatarSrc;
       }
 
+      function buildAvatarSrc(doctor) {
+        const hasAvatar = !!(doctor.hasAvatar || doctor.avatarImage);
+        if (!hasAvatar) {
+          return defaultAvatarSrc;
+        }
+        return `${API}/doctors/${doctor.id}/avatar`;
+      }
+
       function fetchList() {
-        fetch(`${API}/doctors`)
+        fetch(`${API}/doctors?summary=1`)
           .then(res => res.json())
           .then(data => {
             doctors = data;
@@ -188,7 +196,7 @@
             <td>
               <img
                 class="table-avatar"
-                src="${doctor.avatarImage || defaultAvatarSrc}"
+                src="${buildAvatarSrc(doctor)}"
                 alt="${doctor.name}头像"
               />
             </td>
@@ -206,17 +214,25 @@
       }
 
       window.editDoctor = id => {
-        const doctor = doctors.find(item => item.id === id);
-        if (!doctor) return;
-        form.doctorId.value = doctor.id;
-        form.name.value = doctor.name;
-        form.title.value = doctor.title || '';
-        form.hospitalName.value = doctor.hospitalName || '';
-        form.departmentName.value = doctor.departmentName || '';
-        setAvatar(doctor.avatarImage || '');
-        form.expertise.value = doctor.expertise || '';
-        form.intro.value = doctor.intro || '';
-        avatarInput.value = '';
+        fetch(`${API}/doctors/${id}`)
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('加载医生信息失败');
+            }
+            return res.json();
+          })
+          .then(doctor => {
+            form.doctorId.value = doctor.id;
+            form.name.value = doctor.name;
+            form.title.value = doctor.title || '';
+            form.hospitalName.value = doctor.hospitalName || '';
+            form.departmentName.value = doctor.departmentName || '';
+            setAvatar(doctor.avatarImage || '');
+            form.expertise.value = doctor.expertise || '';
+            form.intro.value = doctor.intro || '';
+            avatarInput.value = '';
+          })
+          .catch(() => alert('加载医生信息失败'));
       };
 
       window.deleteDoctor = id => {
