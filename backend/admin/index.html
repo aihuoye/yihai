@@ -140,7 +140,6 @@
         <thead>
           <tr>
             <th>姓名</th>
-            <th>医生头像</th>
             <th>头衔</th>
             <th>擅长</th>
             <th>简介</th>
@@ -192,13 +191,6 @@
             doctor => `
           <tr>
             <td>${doctor.name}</td>
-            <td>
-              <img
-                class="table-avatar"
-                src="${buildAvatarSrc(doctor)}"
-                alt="${doctor.name}头像"
-              />
-            </td>
             <td>${doctor.title || ''}</td>
             <td>${doctor.expertise || ''}</td>
             <td>${doctor.intro || ''}</td>
