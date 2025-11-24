@@ -71,8 +71,7 @@ const mapDoctorSummaryRow = row => ({
   intro: row.intro,
   hospitalId: row.hospital_id,
   hospitalName: row.hospital_name,
-  departmentName: row.department_name,
-  hasAvatar: !!row.avatar_image
+  departmentName: row.department_name
 });
 
 app.get('/api/doctors', async (req, res) => {
@@ -80,7 +79,13 @@ app.get('/api/doctors', async (req, res) => {
   try {
     const keyword = req.query.keyword ? `%${req.query.keyword}%` : null;
     const summary = req.query.summary === '1';
-    let sql = 'SELECT * FROM doctors';
+    let sql;
+    if (summary) {
+      sql =
+        'SELECT id, name, title, expertise, intro, hospital_id, hospital_name, department_name FROM doctors';
+    } else {
+      sql = 'SELECT * FROM doctors';
+    }
     const params = [];
     if (keyword) {
       sql += ' WHERE name LIKE ? OR expertise LIKE ?';

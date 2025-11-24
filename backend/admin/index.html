@@ -170,8 +170,7 @@
       }
 
       function buildAvatarSrc(doctor) {
-        const hasAvatar = !!(doctor.hasAvatar || doctor.avatarImage);
-        if (!hasAvatar) {
+        if (!doctor || !doctor.id) {
           return defaultAvatarSrc;
         }
         return `${API}/doctors/${doctor.id}/avatar`;
