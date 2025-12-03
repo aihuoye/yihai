@@ -3,6 +3,8 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
+const WechatBot = require('./wechatBot');
 require('dotenv').config();
 
 const app = express();
@@ -202,6 +204,179 @@ app.delete('/api/admin/doctors/:id', async (req, res) => {
   } catch (error) {
     console.error('Failed to delete doctor', error);
     res.status(500).json({ message: 'Delete doctor failed' });
+  }
+});
+
+// 微信小程序手机号解密接口
+app.post('/api/decrypt-phone', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'code is required' 
+      });
+    }
+    
+    // 从环境变量获取小程序配置
+    const appId = process.env.WECHAT_APPID;
+    const appSecret = process.env.WECHAT_APP_SECRET;
+    
+    if (!appId || !appSecret) {
+      console.error('Missing WECHAT_APPID or WECHAT_APP_SECRET in environment variables');
+      return res.status(500).json({ 
+        success: false,
+        message: 'Server configuration error: Missing WeChat credentials' 
+      });
+    }
+    
+    // 调用微信接口获取 access_token
+    const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`;
+    const tokenResponse = await axios.get(tokenUrl);
+    
+    if (tokenResponse.data.errcode) {
+      console.error('Failed to get access_token:', tokenResponse.data);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to get access token',
+        error: tokenResponse.data.errmsg 
+      });
+    }
+    
+    const accessToken = tokenResponse.data.access_token;
+    
+    // 调用微信接口获取手机号
+    const phoneUrl = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+    const phoneResponse = await axios.post(phoneUrl, { code });
+    
+    if (phoneResponse.data.errcode !== 0) {
+      console.error('Failed to get phone number:', phoneResponse.data);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to decrypt phone number',
+        error: phoneResponse.data.errmsg 
+      });
+    }
+    
+    const phoneInfo = phoneResponse.data.phone_info;
+    const phoneNumber = phoneInfo.purePhoneNumber || phoneInfo.phoneNumber;
+    
+    res.json({ 
+      success: true,
+      phoneNumber: phoneNumber,
+      countryCode: phoneInfo.countryCode
+    });
+    
+  } catch (error) {
+    console.error('Failed to decrypt phone number', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to decrypt phone number', 
+      error: error.message 
+    });
+  }
+});
+
+// 企业微信消息推送接口
+app.post('/api/wechat/send-booking-notification', async (req, res) => {
+  try {
+    const { webhookUrl, orderNumber, projectName, phone, message, submitTime, mentionAll } = req.body;
+    
+    // 验证必填参数
+    if (!webhookUrl) {
+      return res.status(400).json({ message: 'webhookUrl is required' });
+    }
+    if (!orderNumber || !projectName || !phone) {
+      return res.status(400).json({ message: 'orderNumber, projectName and phone are required' });
+    }
+    
+    // 创建企业微信机器人实例
+    const bot = new WechatBot(webhookUrl);
+    
+    // 发送预约通知
+    const result = await bot.sendBookingNotification({
+      orderNumber,
+      projectName,
+      phone,
+      message: message || '授权号码',
+      submitTime: submitTime || new Date().toLocaleString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false 
+      })
+    }, mentionAll !== false);
+    
+    res.json({ 
+      success: true, 
+      message: 'Notification sent successfully',
+      data: result 
+    });
+  } catch (error) {
+    console.error('Failed to send wechat notification', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to send notification', 
+      error: error.message 
+    });
+  }
+});
+
+// 企业微信发送自定义文本消息接口
+app.post('/api/wechat/send-text', async (req, res) => {
+  try {
+    const { webhookUrl, content, mentionedList, mentionedMobileList } = req.body;
+    
+    if (!webhookUrl || !content) {
+      return res.status(400).json({ message: 'webhookUrl and content are required' });
+    }
+    
+    const bot = new WechatBot(webhookUrl);
+    const result = await bot.sendText(content, mentionedList, mentionedMobileList);
+    
+    res.json({ 
+      success: true, 
+      message: 'Text message sent successfully',
+      data: result 
+    });
+  } catch (error) {
+    console.error('Failed to send wechat text message', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to send text message', 
+      error: error.message 
+    });
+  }
+});
+
+// 企业微信发送Markdown消息接口
+app.post('/api/wechat/send-markdown', async (req, res) => {
+  try {
+    const { webhookUrl, content } = req.body;
+    
+    if (!webhookUrl || !content) {
+      return res.status(400).json({ message: 'webhookUrl and content are required' });
+    }
+    
+    const bot = new WechatBot(webhookUrl);
+    const result = await bot.sendMarkdown(content);
+    
+    res.json({ 
+      success: true, 
+      message: 'Markdown message sent successfully',
+      data: result 
+    });
+  } catch (error) {
+    console.error('Failed to send wechat markdown message', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to send markdown message', 
+      error: error.message 
+    });
   }
 });
 

@@ -1,5 +1,5 @@
 const { hospitals, featuredDoctors } = require('./utils/mockData');
-const { fetchDoctors } = require('./utils/api');
+const { fetchDoctors, API_BASE_URL } = require('./utils/api');
 const { DEFAULT_AVATAR } = require('./utils/constants');
 
 App({
@@ -8,7 +8,8 @@ App({
       hospitals,
       favorites: wx.getStorageSync('favorites') || [],
       appointments: wx.getStorageSync('appointments') || [],
-      doctors: []
+      doctors: [],
+      phoneNumber: wx.getStorageSync('phoneNumber') || null
     };
     this.doctorReadyCallbacks = [];
     this.loadDoctors();
@@ -29,10 +30,14 @@ App({
   },
 
   setDoctors(doctors) {
-    this.globalData.doctors = doctors.map(doctor => ({
-      ...doctor,
-      avatarImage: doctor.avatarImage || DEFAULT_AVATAR
-    }));
+    this.globalData.doctors = doctors.map(doctor => {
+      const hasId = doctor && doctor.id;
+      const avatarUrl = hasId ? `${API_BASE_URL}/api/doctors/${doctor.id}/avatar` : DEFAULT_AVATAR;
+      return {
+        ...doctor,
+        avatarImage: avatarUrl
+      };
+    });
     (this.doctorReadyCallbacks || []).forEach(cb => typeof cb === 'function' && cb(this.globalData.doctors));
     this.doctorReadyCallbacks = [];
   },
