@@ -3,7 +3,7 @@ const app = getApp();
 Page({
   data: {
     userName: '微信用户',
-    phoneNumber: null,
+    userInfo: null,
     appointments: [],
     services: [
       { id: 'records', title: '预约记录', icon: '＋' },
@@ -13,13 +13,13 @@ Page({
   },
 
   onLoad() {
-    // 加载用户手机号
-    this.loadPhoneNumber();
+    // 加载用户信息
+    this.loadUserInfo();
   },
 
   onShow() {
     this.syncStore();
-    this.loadPhoneNumber();
+    this.loadUserInfo();
   },
 
   onPullDownRefresh() {
@@ -33,79 +33,36 @@ Page({
     });
   },
 
-  loadPhoneNumber() {
-    // 从全局数据或缓存中加载手机号
-    const phoneNumber = app.globalData.phoneNumber || wx.getStorageSync('phoneNumber');
-    if (phoneNumber) {
-      this.setData({ phoneNumber });
+  loadUserInfo() {
+    // 从全局数据或缓存中加载用户信息
+    const userInfo = app.globalData.userInfo || wx.getStorageSync('userInfo');
+    if (userInfo) {
+      this.setData({ userInfo });
     }
   },
 
-  async handleGetPhoneNumber(e) {
-    console.log('手机号授权结果:', e.detail);
+  handleGetUserInfo(e) {
+    console.log('用户信息授权结果:', e.detail);
     
-    if (e.detail.errMsg === 'getPhoneNumber:ok') {
-      // 获取到加密数据，需要发送到后端解密
-      const { code, encryptedData, iv } = e.detail;
+    if (e.detail.userInfo) {
+      const userInfo = e.detail.userInfo;
       
-      wx.showLoading({ title: '登录中...', mask: true });
+      // 保存用户信息到全局数据和缓存
+      app.globalData.userInfo = userInfo;
+      wx.setStorageSync('userInfo', userInfo);
       
-      try {
-        // 调用后端接口解密手机号
-        const res = await this.decryptPhoneNumber(code, encryptedData, iv);
-        
-        if (res.success && res.phoneNumber) {
-          const phoneNumber = res.phoneNumber;
-          
-          // 保存手机号到全局数据和缓存
-          app.globalData.phoneNumber = phoneNumber;
-          wx.setStorageSync('phoneNumber', phoneNumber);
-          
-          this.setData({ phoneNumber });
-          
-          wx.hideLoading();
-          wx.showToast({
-            title: '登录成功',
-            icon: 'success'
-          });
-        } else {
-          throw new Error(res.message || '获取手机号失败');
-        }
-      } catch (error) {
-        console.error('手机号解密失败:', error);
-        wx.hideLoading();
-        wx.showToast({
-          title: error.message || '登录失败，请重试',
-          icon: 'none'
-        });
-      }
+      this.setData({ userInfo });
+      
+      wx.showToast({
+        title: '登录成功',
+        icon: 'success'
+      });
     } else {
       wx.showToast({
         title: '取消授权',
         icon: 'none'
       });
     }
-  },
-
-  // 调用后端接口解密手机号
-  decryptPhoneNumber(code, encryptedData, iv) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: 'http://localhost:4000/api/decrypt-phone',
-        method: 'POST',
-        data: { code, encryptedData, iv },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            resolve(res.data);
-          } else {
-            reject(new Error('服务器错误'));
-          }
-        },
-        fail: (err) => {
-          reject(err);
-        }
-      });
-    });
   },
 
   handleUserInfoTap() {
@@ -127,10 +84,10 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          // 清除手机号信息
-          app.globalData.phoneNumber = null;
-          wx.removeStorageSync('phoneNumber');
-          this.setData({ phoneNumber: null });
+          // 清除用户信息
+          app.globalData.userInfo = null;
+          wx.removeStorageSync('userInfo');
+          this.setData({ userInfo: null });
           
           wx.showToast({
             title: '已退出登录',

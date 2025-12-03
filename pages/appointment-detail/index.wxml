@@ -1,0 +1,105 @@
+<view class="appointment-page">
+  <!-- 门诊服务 -->
+  <view class="card">
+    <view class="card-title">门诊服务</view>
+    
+    <view class="info-row">
+      <text class="label">预约医生</text>
+      <text class="value">{{doctor.name}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="label">挂号费用</text>
+      <text class="value fee">{{doctor.registrationFee}}元</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="label">预约时间</text>
+      <text class="value">{{selectedDate}}</text>
+    </view>
+    
+    <view class="info-row">
+      <text class="label">预约时段</text>
+      <view class="period-selector">
+        <view 
+          class="period-option {{selectedPeriod === '上午' ? 'active' : ''}}" 
+          data-period="上午" 
+          bindtap="selectPeriod">
+          <text class="period-icon {{selectedPeriod === '上午' ? 'active' : ''}}">{{selectedPeriod === '上午' ? '✓' : ''}}</text>
+          <text>上午</text>
+        </view>
+        <view 
+          class="period-option {{selectedPeriod === '下午' ? 'active' : ''}}" 
+          data-period="下午" 
+          bindtap="selectPeriod">
+          <text class="period-icon {{selectedPeriod === '下午' ? 'active' : ''}}">{{selectedPeriod === '下午' ? '✓' : ''}}</text>
+          <text>下午</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="info-row">
+      <text class="label">预约电话</text>
+      <text class="value link" bindtap="getPhoneNumber">{{phoneNumber || '点击授权手机号'}}</text>
+    </view>
+  </view>
+  
+  <!-- 添加就诊人信息 -->
+  <view class="card">
+    <view class="card-title">添加就诊人信息</view>
+    
+    <view class="form-item">
+      <text class="form-label">就诊人</text>
+      <input 
+        class="form-input" 
+        placeholder="请输入就诊人" 
+        value="{{patientName}}"
+        bindinput="handleInput"
+        data-field="patientName" />
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">就诊人性别</text>
+      <view class="gender-selector">
+        <view 
+          class="gender-option {{patientGender === '男' ? 'active' : ''}}" 
+          data-gender="男" 
+          bindtap="selectGender">
+          <text class="gender-icon {{patientGender === '男' ? 'active' : ''}}">{{patientGender === '男' ? '✓' : ''}}</text>
+          <text>男</text>
+        </view>
+        <view 
+          class="gender-option {{patientGender === '女' ? 'active' : ''}}" 
+          data-gender="女" 
+          bindtap="selectGender">
+          <text class="gender-icon {{patientGender === '女' ? 'active' : ''}}">{{patientGender === '女' ? '✓' : ''}}</text>
+          <text>女</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">就诊人年龄</text>
+      <input 
+        class="form-input" 
+        placeholder="请输入就诊人年龄" 
+        type="number"
+        value="{{patientAge}}"
+        bindinput="handleInput"
+        data-field="patientAge" />
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">病情症状描述</text>
+      <textarea 
+        class="form-textarea" 
+        placeholder="请输入症状" 
+        value="{{symptoms}}"
+        bindinput="handleInput"
+        data-field="symptoms" />
+    </view>
+  </view>
+  
+  <!-- 确定预约按钮 -->
+  <button class="submit-btn" bindtap="submitAppointment">确定预约</button>
+</view>

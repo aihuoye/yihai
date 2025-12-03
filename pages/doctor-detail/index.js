@@ -36,7 +36,17 @@ Page({
 
   handleScheduleBooking(e) {
     const { date } = e.currentTarget.dataset;
-    wx.showToast({ title: `${date} 已预约`, icon: 'success' });
+    const doctor = this.data.doctor;
+    
+    if (!doctor || !doctor.id) {
+      wx.showToast({ title: '医生信息错误', icon: 'none' });
+      return;
+    }
+    
+    // 跳转到预约详情页面
+    wx.navigateTo({
+      url: `/pages/appointment-detail/index?doctorId=${doctor.id}&date=${encodeURIComponent(date)}`
+    });
   },
 
   handleSectionChange(e) {

@@ -3,6 +3,7 @@
     "pages/home/index",
     "pages/tab-booking/index",
     "pages/doctor-detail/index",
+    "pages/appointment-detail/index",
     "pages/date-booking/index",
     "pages/doctor-team/index",
     "pages/hospital-info/index",

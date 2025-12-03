@@ -1,19 +1,19 @@
 <view class="mine-page">
-  <button class="hero-btn" open-type="getPhoneNumber" bindgetphonenumber="handleGetPhoneNumber" hover-class="none" wx:if="{{!phoneNumber}}">
+  <button class="hero-btn" open-type="getUserInfo" bindgetuserinfo="handleGetUserInfo" hover-class="none" wx:if="{{!userInfo}}">
     <view class="hero">
       <view class="avatar">👤</view>
       <view class="hero-info">
         <view class="hero-name">微信用户</view>
-        <view class="hero-desc">点击授权手机号快捷登录</view>
+        <view class="hero-desc">点击头像授权登录</view>
       </view>
     </view>
   </button>
   
   <view class="hero" wx:else bindtap="handleUserInfoTap">
-    <view class="avatar">✅</view>
+    <image class="avatar-img" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
     <view class="hero-info">
-      <view class="hero-name">{{phoneNumber}}</view>
-      <view class="hero-desc">已授权登录</view>
+      <view class="hero-name">{{userInfo.nickName}}</view>
+      <view class="hero-desc">已登录</view>
     </view>
   </view>
 

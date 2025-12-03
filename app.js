@@ -9,7 +9,7 @@ App({
       favorites: wx.getStorageSync('favorites') || [],
       appointments: wx.getStorageSync('appointments') || [],
       doctors: [],
-      phoneNumber: wx.getStorageSync('phoneNumber') || null
+      userInfo: wx.getStorageSync('userInfo') || null
     };
     this.doctorReadyCallbacks = [];
     this.loadDoctors();

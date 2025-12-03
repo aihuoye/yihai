@@ -62,6 +62,7 @@ const mapDoctorRow = row => ({
   hospitalId: row.hospital_id,
   hospitalName: row.hospital_name,
   departmentName: row.department_name,
+  registrationFee: row.registration_fee || 10.00,
   avatarImage: getAvatarBase64(row.avatar_image)
 });
 
@@ -154,16 +155,17 @@ app.get('/api/doctors/:id', async (req, res) => {
 });
 
 app.post('/api/admin/doctors', async (req, res) => {
-  const { name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarImage } = req.body;
+  const { name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarImage, registrationFee } = req.body;
   if (!name) {
     res.status(400).json({ message: 'Doctor name is required' });
     return;
   }
   try {
     const avatarPayload = normalizeAvatarValue(avatarImage) || defaultAvatarBase64 || null;
+    const fee = registrationFee || 10.00;
     const [result] = await pool.query(
-      'INSERT INTO doctors (name, title, expertise, intro, hospital_id, hospital_name, department_name, avatar_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [name, title || '', expertise || '', intro || '', hospitalId || '', hospitalName || '', departmentName || '', avatarPayload]
+      'INSERT INTO doctors (name, title, expertise, intro, hospital_id, hospital_name, department_name, avatar_image, registration_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, title || '', expertise || '', intro || '', hospitalId || '', hospitalName || '', departmentName || '', avatarPayload, fee]
     );
     const [rows] = await pool.query('SELECT * FROM doctors WHERE id = ?', [result.insertId]);
     res.status(201).json(mapDoctorRow(rows[0]));
@@ -174,12 +176,13 @@ app.post('/api/admin/doctors', async (req, res) => {
 });
 
 app.put('/api/admin/doctors/:id', async (req, res) => {
-  const { name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarImage } = req.body;
+  const { name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarImage, registrationFee } = req.body;
   try {
     const avatarPayload = normalizeAvatarValue(avatarImage);
+    const fee = registrationFee !== undefined ? registrationFee : 10.00;
     const [result] = await pool.query(
-      'UPDATE doctors SET name=?, title=?, expertise=?, intro=?, hospital_id=?, hospital_name=?, department_name=?, avatar_image=? WHERE id=?',
-      [name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarPayload, req.params.id]
+      'UPDATE doctors SET name=?, title=?, expertise=?, intro=?, hospital_id=?, hospital_name=?, department_name=?, avatar_image=?, registration_fee=? WHERE id=?',
+      [name, title, expertise, intro, hospitalId, hospitalName, departmentName, avatarPayload, fee, req.params.id]
     );
     if (!result.affectedRows) {
       res.status(404).json({ message: 'Doctor not found' });
@@ -377,6 +380,320 @@ app.post('/api/wechat/send-markdown', async (req, res) => {
       message: 'Failed to send markdown message', 
       error: error.message 
     });
+  }
+});
+
+// ==================== 号源管理接口 ====================
+
+// 获取医生号源信息
+app.get('/api/doctors/:id/schedules', async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+    const startDate = req.query.startDate || new Date().toISOString().split('T')[0];
+    
+    const [schedules] = await pool.query(
+      `SELECT * FROM doctor_schedules 
+       WHERE doctor_id = ? AND schedule_date >= ? 
+       ORDER BY schedule_date, period`,
+      [doctorId, startDate]
+    );
+    
+    res.json(schedules);
+  } catch (error) {
+    console.error('Failed to load doctor schedules', error);
+    res.status(500).json({ message: 'Failed to load schedules' });
+  }
+});
+
+// 管理后台：设置医生号源
+app.post('/api/admin/schedules', async (req, res) => {
+  try {
+    const { doctorId, scheduleDate, period, totalSlots } = req.body;
+    
+    if (!doctorId || !scheduleDate || !period || !totalSlots) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    // 使用 INSERT ... ON DUPLICATE KEY UPDATE 来处理新增或更新
+    const [result] = await pool.query(
+      `INSERT INTO doctor_schedules (doctor_id, schedule_date, period, total_slots, remaining_slots)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE 
+       total_slots = VALUES(total_slots),
+       remaining_slots = VALUES(remaining_slots)`,
+      [doctorId, scheduleDate, period, totalSlots, totalSlots]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: 'Schedule saved successfully',
+      id: result.insertId 
+    });
+  } catch (error) {
+    console.error('Failed to save schedule', error);
+    res.status(500).json({ message: 'Failed to save schedule' });
+  }
+});
+
+// 管理后台：批量设置医生号源（设置未来N天的号源）
+app.post('/api/admin/schedules/batch', async (req, res) => {
+  try {
+    const { doctorId, days, morningSlots, afternoonSlots } = req.body;
+    
+    if (!doctorId || !days) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      const today = new Date();
+      for (let i = 0; i < days; i++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // 设置上午号源
+        if (morningSlots > 0) {
+          await connection.query(
+            `INSERT INTO doctor_schedules (doctor_id, schedule_date, period, total_slots, remaining_slots)
+             VALUES (?, ?, '上午', ?, ?)
+             ON DUPLICATE KEY UPDATE 
+             total_slots = VALUES(total_slots),
+             remaining_slots = VALUES(remaining_slots)`,
+            [doctorId, dateStr, morningSlots, morningSlots]
+          );
+        }
+        
+        // 设置下午号源
+        if (afternoonSlots > 0) {
+          await connection.query(
+            `INSERT INTO doctor_schedules (doctor_id, schedule_date, period, total_slots, remaining_slots)
+             VALUES (?, ?, '下午', ?, ?)
+             ON DUPLICATE KEY UPDATE 
+             total_slots = VALUES(total_slots),
+             remaining_slots = VALUES(remaining_slots)`,
+            [doctorId, dateStr, afternoonSlots, afternoonSlots]
+          );
+        }
+      }
+      
+      await connection.commit();
+      res.json({ success: true, message: `Successfully set schedules for ${days} days` });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Failed to batch save schedules', error);
+    res.status(500).json({ message: 'Failed to batch save schedules' });
+  }
+});
+
+// 管理后台：获取所有号源列表
+app.get('/api/admin/schedules', async (req, res) => {
+  try {
+    const [schedules] = await pool.query(
+      `SELECT s.*, d.name as doctor_name, d.hospital_name, d.department_name
+       FROM doctor_schedules s
+       LEFT JOIN doctors d ON s.doctor_id = d.id
+       WHERE s.schedule_date >= CURDATE()
+       ORDER BY s.schedule_date, s.doctor_id, s.period`
+    );
+    
+    res.json(schedules);
+  } catch (error) {
+    console.error('Failed to load schedules', error);
+    res.status(500).json({ message: 'Failed to load schedules' });
+  }
+});
+
+// ==================== 预约接口 ====================
+
+// 创建预约
+app.post('/api/appointments', async (req, res) => {
+  try {
+    const {
+      doctorId,
+      doctorName,
+      hospitalName,
+      departmentName,
+      scheduleDate,
+      period,
+      patientName,
+      patientGender,
+      patientAge,
+      patientPhone,
+      symptoms,
+      registrationFee
+    } = req.body;
+    
+    // 验证必填字段
+    if (!doctorId || !scheduleDate || !period || !patientName || !patientPhone) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      // 1. 检查号源是否充足
+      const [schedules] = await connection.query(
+        `SELECT * FROM doctor_schedules 
+         WHERE doctor_id = ? AND schedule_date = ? AND period = ?
+         FOR UPDATE`,
+        [doctorId, scheduleDate, period]
+      );
+      
+      if (!schedules.length) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ message: '该时段暂无号源' });
+      }
+      
+      const schedule = schedules[0];
+      if (schedule.remaining_slots <= 0) {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ message: '该时段号源已满' });
+      }
+      
+      // 2. 扣减号源
+      await connection.query(
+        `UPDATE doctor_schedules 
+         SET remaining_slots = remaining_slots - 1 
+         WHERE id = ?`,
+        [schedule.id]
+      );
+      
+      // 3. 创建预约记录
+      const [result] = await connection.query(
+        `INSERT INTO appointments 
+         (doctor_id, doctor_name, hospital_name, department_name, schedule_date, period, 
+          patient_name, patient_gender, patient_age, patient_phone, symptoms, registration_fee, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        [doctorId, doctorName, hospitalName, departmentName, scheduleDate, period,
+         patientName, patientGender, patientAge, patientPhone, symptoms, registrationFee]
+      );
+      
+      await connection.commit();
+      connection.release();
+      
+      // 4. 返回预约信息
+      const [appointments] = await pool.query(
+        'SELECT * FROM appointments WHERE id = ?',
+        [result.insertId]
+      );
+      
+      res.status(201).json({
+        success: true,
+        message: '预约成功',
+        appointment: appointments[0]
+      });
+      
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Failed to create appointment', error);
+    res.status(500).json({ message: 'Failed to create appointment', error: error.message });
+  }
+});
+
+// 查询预约记录
+app.get('/api/appointments', async (req, res) => {
+  try {
+    const { phone, doctorId, status } = req.query;
+    
+    let sql = 'SELECT * FROM appointments WHERE 1=1';
+    const params = [];
+    
+    if (phone) {
+      sql += ' AND patient_phone = ?';
+      params.push(phone);
+    }
+    
+    if (doctorId) {
+      sql += ' AND doctor_id = ?';
+      params.push(doctorId);
+    }
+    
+    if (status) {
+      sql += ' AND status = ?';
+      params.push(status);
+    }
+    
+    sql += ' ORDER BY created_at DESC';
+    
+    const [appointments] = await pool.query(sql, params);
+    res.json(appointments);
+  } catch (error) {
+    console.error('Failed to load appointments', error);
+    res.status(500).json({ message: 'Failed to load appointments' });
+  }
+});
+
+// 取消预约
+app.put('/api/appointments/:id/cancel', async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+    
+    const connection = await pool.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      // 1. 获取预约信息
+      const [appointments] = await connection.query(
+        'SELECT * FROM appointments WHERE id = ? FOR UPDATE',
+        [appointmentId]
+      );
+      
+      if (!appointments.length) {
+        await connection.rollback();
+        connection.release();
+        return res.status(404).json({ message: 'Appointment not found' });
+      }
+      
+      const appointment = appointments[0];
+      
+      if (appointment.status === 'cancelled') {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ message: 'Appointment already cancelled' });
+      }
+      
+      // 2. 更新预约状态
+      await connection.query(
+        'UPDATE appointments SET status = "cancelled" WHERE id = ?',
+        [appointmentId]
+      );
+      
+      // 3. 恢复号源
+      await connection.query(
+        `UPDATE doctor_schedules 
+         SET remaining_slots = remaining_slots + 1 
+         WHERE doctor_id = ? AND schedule_date = ? AND period = ?`,
+        [appointment.doctor_id, appointment.schedule_date, appointment.period]
+      );
+      
+      await connection.commit();
+      connection.release();
+      
+      res.json({ success: true, message: 'Appointment cancelled successfully' });
+      
+    } catch (error) {
+      await connection.rollback();
+      connection.release();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Failed to cancel appointment', error);
+    res.status(500).json({ message: 'Failed to cancel appointment' });
   }
 });
 

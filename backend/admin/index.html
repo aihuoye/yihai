@@ -120,6 +120,7 @@
         <label>头衔<input name="title" /></label>
         <label>所在医院<input name="hospitalName" /></label>
         <label>科室<input name="departmentName" /></label>
+        <label>挂号费用（元）<input name="registrationFee" type="number" step="0.01" value="10.00" /></label>
         <label class="avatar-field">
           <span>头像</span>
           <div class="avatar-upload">
@@ -144,6 +145,7 @@
             <th>擅长</th>
             <th>简介</th>
             <th>医院/科室</th>
+            <th>挂号费用</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -195,8 +197,10 @@
             <td>${doctor.expertise || ''}</td>
             <td>${doctor.intro || ''}</td>
             <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
+            <td>¥${doctor.registrationFee || '10.00'}</td>
             <td class="table-actions">
               <button onclick="editDoctor(${doctor.id})">编辑</button>
+              <button onclick="manageSchedule(${doctor.id}, '${doctor.name}')">号源</button>
               <button onclick="deleteDoctor(${doctor.id})">删除</button>
             </td>
           </tr>`
@@ -218,6 +222,7 @@
             form.title.value = doctor.title || '';
             form.hospitalName.value = doctor.hospitalName || '';
             form.departmentName.value = doctor.departmentName || '';
+            form.registrationFee.value = doctor.registrationFee || '10.00';
             setAvatar(doctor.avatarImage || '');
             form.expertise.value = doctor.expertise || '';
             form.intro.value = doctor.intro || '';
@@ -280,6 +285,38 @@
         };
         reader.readAsDataURL(file);
       });
+
+      // 号源管理
+      window.manageSchedule = (doctorId, doctorName) => {
+        const days = prompt(`为医生【${doctorName}】设置未来几天的号源？（输入天数，如：7）`, '7');
+        if (!days || isNaN(days) || days <= 0) return;
+        
+        const morningSlots = prompt('每天上午号源数量？', '20');
+        if (morningSlots === null) return;
+        
+        const afternoonSlots = prompt('每天下午号源数量？', '20');
+        if (afternoonSlots === null) return;
+        
+        fetch(`${API}/admin/schedules/batch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doctorId: doctorId,
+            days: parseInt(days),
+            morningSlots: parseInt(morningSlots) || 0,
+            afternoonSlots: parseInt(afternoonSlots) || 0
+          })
+        })
+          .then(res => res.json())
+          .then(result => {
+            if (result.success) {
+              alert(`成功设置 ${days} 天的号源！`);
+            } else {
+              alert('设置失败：' + (result.message || '未知错误'));
+            }
+          })
+          .catch(() => alert('设置号源失败'));
+      };
 
       resetBtn.addEventListener('click', resetForm);
       setAvatar('');
