@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台登录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-container {
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 400px;
+      max-width: 90%;
+    }
+    .login-title {
+      font-size: 28px;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .captcha-group {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .captcha-group input {
+      flex: 1;
+    }
+    .captcha-canvas {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      height: 46px;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 24px;
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    .login-btn:active {
+      transform: translateY(0);
+    }
+    .error-msg {
+      color: #f56c6c;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+    .error-msg.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1 class="login-title">管理后台登录</h1>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" name="username" placeholder="请输入用户名" required />
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" placeholder="请输入密码" required />
+      </div>
+      <div class="form-group">
+        <label for="captcha">验证码</label>
+        <div class="captcha-group">
+          <input type="text" id="captcha" name="captcha" placeholder="请输入验证码" required maxlength="4" />
+          <canvas id="captchaCanvas" class="captcha-canvas" width="120" height="46"></canvas>
+        </div>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <button type="submit" class="login-btn">登录</button>
+    </form>
+  </div>
+
+  <script>
+    // 验证码生成
+    let captchaCode = '';
+    const canvas = document.getElementById('captchaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function generateCaptcha() {
+      const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      captchaCode = '';
+      for (let i = 0; i < 4; i++) {
+        captchaCode += chars[Math.floor(Math.random() * chars.length)];
+      }
+      
+      // 清空画布
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 绘制干扰线
+      for (let i = 0; i < 3; i++) {
+        ctx.strokeStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.3)`;
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+        ctx.stroke();
+      }
+      
+      // 绘制验证码
+      for (let i = 0; i < captchaCode.length; i++) {
+        ctx.font = `${20 + Math.random() * 10}px Arial`;
+        ctx.fillStyle = `rgb(${Math.random() * 100},${Math.random() * 100},${Math.random() * 100})`;
+        ctx.textBaseline = 'middle';
+        const x = 15 + i * 25;
+        const y = 23 + (Math.random() - 0.5) * 8;
+        const angle = (Math.random() - 0.5) * 0.4;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.fillText(captchaCode[i], 0, 0);
+        ctx.restore();
+      }
+      
+      // 绘制干扰点
+      for (let i = 0; i < 30; i++) {
+        ctx.fillStyle = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.5)`;
+        ctx.beginPath();
+        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
+
+    // 点击验证码刷新
+    canvas.addEventListener('click', generateCaptcha);
+
+    // 初始化验证码
+    generateCaptcha();
+
+    // 表单提交
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('show');
+      setTimeout(() => {
+        errorMsg.classList.remove('show');
+      }, 3000);
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const captcha = document.getElementById('captcha').value.trim().toUpperCase();
+      
+      // 验证验证码
+      if (captcha !== captchaCode) {
+        showError('验证码错误');
+        generateCaptcha();
+        document.getElementById('captcha').value = '';
+        return;
+      }
+      
+      // 验证用户名和密码
+      if (username === 'admin' && password === 'Aa121212') {
+        // 登录成功，保存登录状态
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        sessionStorage.setItem('adminUsername', username);
+        // 跳转到管理页面
+        window.location.href = '/admin/index.html';
+      } else {
+        showError('用户名或密码错误');
+        generateCaptcha();
+        document.getElementById('captcha').value = '';
+      }
+    });
+  </script>
+</body>
+</html>

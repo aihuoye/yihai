@@ -3,23 +3,124 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>医生管理</title>
+    <title>医生管理后台</title>
     <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
-        margin: 0;
-        padding: 24px;
         background: #f5f7fb;
+        overflow-x: hidden;
       }
-      h1 {
-        margin-bottom: 16px;
+      /* 顶部导航栏 */
+      .top-bar {
+        height: 60px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+      }
+      .top-bar-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+      }
+      .top-bar-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .username {
+        color: #666;
+        font-size: 14px;
+      }
+      .logout-btn {
+        padding: 6px 16px;
+        background: #f5f7fb;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #666;
+        transition: all 0.3s;
+      }
+      .logout-btn:hover {
+        background: #e9ecf4;
+        color: #333;
+      }
+      /* 侧边栏 */
+      .sidebar {
+        width: 220px;
+        background: #fff;
+        position: fixed;
+        left: 0;
+        top: 60px;
+        bottom: 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+        overflow-y: auto;
+      }
+      .menu {
+        padding: 16px 0;
+      }
+      .menu-item {
+        padding: 14px 24px;
+        cursor: pointer;
+        color: #666;
+        font-size: 15px;
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .menu-item:hover {
+        background: #f5f7fb;
+        color: #333;
+      }
+      .menu-item.active {
+        background: #e8f0fe;
+        color: #4f8efd;
+        border-left-color: #4f8efd;
+        font-weight: 500;
+      }
+      .menu-icon {
+        font-size: 18px;
+      }
+      /* 主内容区 */
+      .main-content {
+        margin-left: 220px;
+        margin-top: 60px;
+        padding: 24px;
+        min-height: calc(100vh - 60px);
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
       }
       .container {
         background: #fff;
         border-radius: 16px;
         padding: 24px;
-        box-shadow: 0 12px 32px rgba(30, 60, 114, 0.08);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       }
+      h1 {
+        margin-bottom: 24px;
+        font-size: 24px;
+        color: #333;
+      }
+      /* 表单样式 */
       form {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -55,14 +156,29 @@
         padding: 10px 18px;
         font-size: 14px;
         cursor: pointer;
+        transition: all 0.3s;
       }
       .primary {
         background: #4f8efd;
         color: #fff;
       }
+      .primary:hover {
+        background: #3d7eeb;
+      }
       .secondary {
         background: #e9ecf4;
       }
+      .secondary:hover {
+        background: #d7dce5;
+      }
+      .danger {
+        background: #f56c6c;
+        color: #fff;
+      }
+      .danger:hover {
+        background: #e85555;
+      }
+      /* 表格样式 */
       table {
         width: 100%;
         border-collapse: collapse;
@@ -77,6 +193,7 @@
       th {
         color: #7a8395;
         font-weight: 500;
+        background: #f9fafb;
       }
       .table-avatar {
         width: 40px;
@@ -88,6 +205,8 @@
       }
       .table-actions button {
         margin-right: 8px;
+        padding: 6px 12px;
+        font-size: 13px;
       }
       .avatar-field {
         grid-column: span 2;
@@ -109,51 +228,219 @@
       .avatar-field input[type='file'] {
         flex: 1;
       }
+      /* 号源管理样式 */
+      .schedule-controls {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        align-items: flex-end;
+      }
+      .schedule-controls label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        color: #3c4556;
+      }
+      .schedule-controls select,
+      .schedule-controls input {
+        margin-top: 6px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #d7dce5;
+        font-size: 14px;
+        min-width: 150px;
+      }
+      .schedule-table {
+        overflow-x: auto;
+      }
+      .schedule-table table {
+        min-width: 800px;
+      }
+      .schedule-cell {
+        text-align: center;
+      }
+      .schedule-input {
+        width: 60px;
+        padding: 6px;
+        border: 1px solid #d7dce5;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 13px;
+      }
+      .period-label {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 4px;
+      }
+      .slot-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .batch-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>医生管理</h1>
-      <form id="doctorForm">
-        <input type="hidden" name="id" id="doctorId" />
-        <label>姓名<input name="name" required /></label>
-        <label>头衔<input name="title" /></label>
-        <label>所在医院<input name="hospitalName" /></label>
-        <label>科室<input name="departmentName" /></label>
-        <label>挂号费用（元）<input name="registrationFee" type="number" step="0.01" value="10.00" /></label>
-        <label class="avatar-field">
-          <span>头像</span>
-          <div class="avatar-upload">
-            <img id="avatarPreview" class="avatar-preview" src="public-sample-avatar.png" alt="头像预览" />
-            <input type="file" id="avatarInput" accept="image/*" />
-          </div>
-          <input type="hidden" name="avatarImage" id="avatarImage" />
-        </label>
-        <label>擅长<textarea name="expertise"></textarea></label>
-        <label>简介<textarea name="intro"></textarea></label>
-        <div class="actions">
-          <button type="submit" class="primary">保存</button>
-          <button type="button" class="secondary" id="resetBtn">重置</button>
-        </div>
-      </form>
+    <!-- 顶部导航栏 -->
+    <div class="top-bar">
+      <div class="top-bar-title">医生管理后台</div>
+      <div class="top-bar-user">
+        <span class="username" id="usernameDisplay"></span>
+        <button class="logout-btn" id="logoutBtn">退出登录</button>
+      </div>
+    </div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>姓名</th>
-            <th>头衔</th>
-            <th>擅长</th>
-            <th>简介</th>
-            <th>医院/科室</th>
-            <th>挂号费用</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="doctorBody"></tbody>
-      </table>
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+      <div class="menu">
+        <div class="menu-item active" data-page="doctor-info">
+          <span class="menu-icon">👨‍⚕️</span>
+          <span>医生基础信息管理</span>
+        </div>
+        <div class="menu-item" data-page="schedule">
+          <span class="menu-icon">📅</span>
+          <span>医生号源信息管理</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 医生基础信息管理页面 -->
+      <div class="page active" id="doctor-info-page">
+        <div class="container">
+          <h1>医生基础信息管理</h1>
+          <form id="doctorForm">
+            <input type="hidden" name="id" id="doctorId" />
+            <label>姓名<input name="name" required /></label>
+            <label>头衔<input name="title" /></label>
+            <label>所在医院<input name="hospitalName" /></label>
+            <label>科室<input name="departmentName" /></label>
+            <label>挂号费用（元）<input name="registrationFee" type="number" step="0.01" value="10.00" /></label>
+            <label class="avatar-field">
+              <span>头像</span>
+              <div class="avatar-upload">
+                <img id="avatarPreview" class="avatar-preview" src="public-sample-avatar.png" alt="头像预览" />
+                <input type="file" id="avatarInput" accept="image/*" />
+              </div>
+              <input type="hidden" name="avatarImage" id="avatarImage" />
+            </label>
+            <label>擅长<textarea name="expertise"></textarea></label>
+            <label>简介<textarea name="intro"></textarea></label>
+            <div class="actions">
+              <button type="submit" class="primary">保存</button>
+              <button type="button" class="secondary" id="resetBtn">重置</button>
+            </div>
+          </form>
+
+          <table>
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>头衔</th>
+                <th>擅长</th>
+                <th>简介</th>
+                <th>医院/科室</th>
+                <th>挂号费用</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="doctorBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 医生号源信息管理页面 -->
+      <div class="page" id="schedule-page">
+        <div class="container">
+          <h1>医生号源信息管理</h1>
+          
+          <div class="schedule-controls">
+            <label>
+              选择医生
+              <select id="scheduleDoctor">
+                <option value="">请选择医生</option>
+              </select>
+            </label>
+            <label>
+              开始日期
+              <input type="date" id="scheduleStartDate" />
+            </label>
+            <label>
+              结束日期
+              <input type="date" id="scheduleEndDate" />
+            </label>
+            <button class="primary" id="loadScheduleBtn">查询号源</button>
+          </div>
+
+          <div class="batch-actions">
+            <button class="primary" id="batchSetBtn">批量设置号源</button>
+            <button class="secondary" id="saveScheduleBtn" style="display:none;">保存修改</button>
+          </div>
+
+          <div class="schedule-table">
+            <table id="scheduleTable">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>星期</th>
+                  <th>上午号源</th>
+                  <th>下午号源</th>
+                  <th>总号源</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleBody">
+                <tr>
+                  <td colspan="5" style="text-align:center;color:#999;padding:40px;">请选择医生和日期范围查询号源</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
+      // 检查登录状态
+      if (!sessionStorage.getItem('adminLoggedIn')) {
+        window.location.href = '/admin/login.html';
+      }
+
+      // 显示用户名
+      document.getElementById('usernameDisplay').textContent = sessionStorage.getItem('adminUsername') || 'admin';
+
+      // 退出登录
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        if (confirm('确定要退出登录吗？')) {
+          sessionStorage.removeItem('adminLoggedIn');
+          sessionStorage.removeItem('adminUsername');
+          window.location.href = '/admin/login.html';
+        }
+      });
+
+      // 菜单切换
+      const menuItems = document.querySelectorAll('.menu-item');
+      const pages = document.querySelectorAll('.page');
+
+      menuItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const pageName = item.dataset.page;
+          
+          // 更新菜单激活状态
+          menuItems.forEach(mi => mi.classList.remove('active'));
+          item.classList.add('active');
+          
+          // 切换页面
+          pages.forEach(page => page.classList.remove('active'));
+          document.getElementById(pageName + '-page').classList.add('active');
+        });
+      });
+
+      // ==================== 医生基础信息管理 ====================
       const API = '/api';
       const bodyEl = document.getElementById('doctorBody');
       const form = document.getElementById('doctorForm');
@@ -183,6 +470,7 @@
           .then(data => {
             doctors = data;
             render();
+            updateDoctorSelect();
           })
           .catch(() => alert('无法加载医生列表'));
       }
@@ -199,9 +487,8 @@
             <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
             <td>¥${doctor.registrationFee || '10.00'}</td>
             <td class="table-actions">
-              <button onclick="editDoctor(${doctor.id})">编辑</button>
-              <button onclick="manageSchedule(${doctor.id}, '${doctor.name}')">号源</button>
-              <button onclick="deleteDoctor(${doctor.id})">删除</button>
+              <button class="secondary" onclick="editDoctor(${doctor.id})">编辑</button>
+              <button class="danger" onclick="deleteDoctor(${doctor.id})">删除</button>
             </td>
           </tr>`
           )
@@ -238,6 +525,7 @@
             if (res.ok) {
               doctors = doctors.filter(item => item.id !== id);
               render();
+              updateDoctorSelect();
             } else {
               alert('删除失败');
             }
@@ -265,6 +553,8 @@
             }
             resetForm();
             render();
+            updateDoctorSelect();
+            alert('保存成功！');
           })
           .catch(() => alert('保存失败'));
       });
@@ -286,23 +576,139 @@
         reader.readAsDataURL(file);
       });
 
-      // 号源管理
-      window.manageSchedule = (doctorId, doctorName) => {
-        const days = prompt(`为医生【${doctorName}】设置未来几天的号源？（输入天数，如：7）`, '7');
-        if (!days || isNaN(days) || days <= 0) return;
+      resetBtn.addEventListener('click', resetForm);
+      setAvatar('');
+      fetchList();
+
+      // ==================== 号源管理 ====================
+      const scheduleDoctorSelect = document.getElementById('scheduleDoctor');
+      const scheduleStartDate = document.getElementById('scheduleStartDate');
+      const scheduleEndDate = document.getElementById('scheduleEndDate');
+      const loadScheduleBtn = document.getElementById('loadScheduleBtn');
+      const batchSetBtn = document.getElementById('batchSetBtn');
+      const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+      const scheduleBody = document.getElementById('scheduleBody');
+      
+      let currentSchedules = [];
+
+      // 更新医生下拉列表
+      function updateDoctorSelect() {
+        scheduleDoctorSelect.innerHTML = '<option value="">请选择医生</option>' +
+          doctors.map(d => `<option value="${d.id}">${d.name} - ${d.title || ''}</option>`).join('');
+      }
+
+      // 设置默认日期范围（今天到未来7天）
+      function setDefaultDateRange() {
+        const today = new Date();
+        const nextWeek = new Date(today);
+        nextWeek.setDate(today.getDate() + 6);
         
-        const morningSlots = prompt('每天上午号源数量？', '20');
+        scheduleStartDate.value = formatDate(today);
+        scheduleEndDate.value = formatDate(nextWeek);
+      }
+
+      function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function getWeekDay(dateStr) {
+        const days = ['日', '一', '二', '三', '四', '五', '六'];
+        const date = new Date(dateStr);
+        return '星期' + days[date.getDay()];
+      }
+
+      // 查询号源
+      loadScheduleBtn.addEventListener('click', loadSchedules);
+
+      function loadSchedules() {
+        const doctorId = scheduleDoctorSelect.value;
+        const startDate = scheduleStartDate.value;
+        const endDate = scheduleEndDate.value;
+
+        if (!doctorId) {
+          alert('请选择医生');
+          return;
+        }
+        if (!startDate || !endDate) {
+          alert('请选择日期范围');
+          return;
+        }
+        if (startDate > endDate) {
+          alert('开始日期不能大于结束日期');
+          return;
+        }
+
+        fetch(`${API}/admin/schedules?doctorId=${doctorId}&startDate=${startDate}&endDate=${endDate}`)
+          .then(res => res.json())
+          .then(data => {
+            currentSchedules = data;
+            renderSchedules();
+            saveScheduleBtn.style.display = 'inline-block';
+          })
+          .catch(() => alert('加载号源失败'));
+      }
+
+      function renderSchedules() {
+        if (currentSchedules.length === 0) {
+          scheduleBody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:40px;">暂无号源数据</td></tr>';
+          return;
+        }
+
+        scheduleBody.innerHTML = currentSchedules.map(schedule => `
+          <tr>
+            <td>${schedule.date}</td>
+            <td>${getWeekDay(schedule.date)}</td>
+            <td class="schedule-cell">
+              <input type="number" class="schedule-input" 
+                data-id="${schedule.id}" 
+                data-field="morningSlots" 
+                value="${schedule.morningSlots}" 
+                min="0" />
+            </td>
+            <td class="schedule-cell">
+              <input type="number" class="schedule-input" 
+                data-id="${schedule.id}" 
+                data-field="afternoonSlots" 
+                value="${schedule.afternoonSlots}" 
+                min="0" />
+            </td>
+            <td class="schedule-cell">${schedule.morningSlots + schedule.afternoonSlots}</td>
+          </tr>
+        `).join('');
+      }
+
+      // 批量设置号源
+      batchSetBtn.addEventListener('click', () => {
+        const doctorId = scheduleDoctorSelect.value;
+        if (!doctorId) {
+          alert('请先选择医生');
+          return;
+        }
+
+        const morningSlots = prompt('请输入上午号源数量：', '20');
         if (morningSlots === null) return;
         
-        const afternoonSlots = prompt('每天下午号源数量？', '20');
+        const afternoonSlots = prompt('请输入下午号源数量：', '20');
         if (afternoonSlots === null) return;
-        
+
+        const startDate = scheduleStartDate.value;
+        const endDate = scheduleEndDate.value;
+
+        if (!startDate || !endDate) {
+          alert('请选择日期范围');
+          return;
+        }
+
         fetch(`${API}/admin/schedules/batch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            doctorId: doctorId,
-            days: parseInt(days),
+            doctorId: parseInt(doctorId),
+            startDate: startDate,
+            endDate: endDate,
             morningSlots: parseInt(morningSlots) || 0,
             afternoonSlots: parseInt(afternoonSlots) || 0
           })
@@ -310,17 +716,57 @@
           .then(res => res.json())
           .then(result => {
             if (result.success) {
-              alert(`成功设置 ${days} 天的号源！`);
+              alert('批量设置成功！');
+              loadSchedules();
             } else {
               alert('设置失败：' + (result.message || '未知错误'));
             }
           })
           .catch(() => alert('设置号源失败'));
-      };
+      });
 
-      resetBtn.addEventListener('click', resetForm);
-      setAvatar('');
-      fetchList();
+      // 保存修改
+      saveScheduleBtn.addEventListener('click', () => {
+        const inputs = document.querySelectorAll('.schedule-input');
+        const updates = [];
+
+        inputs.forEach(input => {
+          const id = input.dataset.id;
+          const field = input.dataset.field;
+          const value = parseInt(input.value) || 0;
+          
+          const schedule = currentSchedules.find(s => s.id == id);
+          if (schedule && schedule[field] !== value) {
+            let update = updates.find(u => u.id == id);
+            if (!update) {
+              update = { id: parseInt(id) };
+              updates.push(update);
+            }
+            update[field] = value;
+          }
+        });
+
+        if (updates.length === 0) {
+          alert('没有修改需要保存');
+          return;
+        }
+
+        Promise.all(updates.map(update => 
+          fetch(`${API}/admin/schedules/${update.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(update)
+          })
+        ))
+          .then(() => {
+            alert('保存成功！');
+            loadSchedules();
+          })
+          .catch(() => alert('保存失败'));
+      });
+
+      // 初始化日期范围
+      setDefaultDateRange();
     </script>
   </body>
 </html>

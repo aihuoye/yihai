@@ -435,27 +435,48 @@ app.post('/api/admin/schedules', async (req, res) => {
   }
 });
 
-// 管理后台：批量设置医生号源（设置未来N天的号源）
+// 管理后台：批量设置医生号源（支持日期范围）
 app.post('/api/admin/schedules/batch', async (req, res) => {
   try {
-    const { doctorId, days, morningSlots, afternoonSlots } = req.body;
+    const { doctorId, days, startDate, endDate, morningSlots, afternoonSlots } = req.body;
     
-    if (!doctorId || !days) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!doctorId) {
+      return res.status(400).json({ message: 'Missing doctorId' });
     }
     
     const connection = await pool.getConnection();
     await connection.beginTransaction();
     
     try {
-      const today = new Date();
-      for (let i = 0; i < days; i++) {
-        const date = new Date(today);
-        date.setDate(date.getDate() + i);
-        const dateStr = date.toISOString().split('T')[0];
+      let dates = [];
+      
+      // 如果提供了日期范围，使用日期范围
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
         
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          dates.push(new Date(d).toISOString().split('T')[0]);
+        }
+      } 
+      // 否则使用天数（从今天开始）
+      else if (days) {
+        const today = new Date();
+        for (let i = 0; i < days; i++) {
+          const date = new Date(today);
+          date.setDate(date.getDate() + i);
+          dates.push(date.toISOString().split('T')[0]);
+        }
+      } else {
+        await connection.rollback();
+        connection.release();
+        return res.status(400).json({ message: 'Missing date range or days parameter' });
+      }
+      
+      // 为每个日期设置号源
+      for (const dateStr of dates) {
         // 设置上午号源
-        if (morningSlots > 0) {
+        if (morningSlots !== undefined && morningSlots >= 0) {
           await connection.query(
             `INSERT INTO doctor_schedules (doctor_id, schedule_date, period, total_slots, remaining_slots)
              VALUES (?, ?, '上午', ?, ?)
@@ -467,7 +488,7 @@ app.post('/api/admin/schedules/batch', async (req, res) => {
         }
         
         // 设置下午号源
-        if (afternoonSlots > 0) {
+        if (afternoonSlots !== undefined && afternoonSlots >= 0) {
           await connection.query(
             `INSERT INTO doctor_schedules (doctor_id, schedule_date, period, total_slots, remaining_slots)
              VALUES (?, ?, '下午', ?, ?)
@@ -480,7 +501,7 @@ app.post('/api/admin/schedules/batch', async (req, res) => {
       }
       
       await connection.commit();
-      res.json({ success: true, message: `Successfully set schedules for ${days} days` });
+      res.json({ success: true, message: `Successfully set schedules for ${dates.length} days` });
     } catch (error) {
       await connection.rollback();
       throw error;
@@ -493,21 +514,133 @@ app.post('/api/admin/schedules/batch', async (req, res) => {
   }
 });
 
-// 管理后台：获取所有号源列表
+// 管理后台：获取号源列表（支持按医生和日期范围查询）
 app.get('/api/admin/schedules', async (req, res) => {
   try {
-    const [schedules] = await pool.query(
-      `SELECT s.*, d.name as doctor_name, d.hospital_name, d.department_name
-       FROM doctor_schedules s
-       LEFT JOIN doctors d ON s.doctor_id = d.id
-       WHERE s.schedule_date >= CURDATE()
-       ORDER BY s.schedule_date, s.doctor_id, s.period`
-    );
+    const { doctorId, startDate, endDate } = req.query;
+    
+    let sql = `SELECT s.*, d.name as doctor_name, d.hospital_name, d.department_name
+               FROM doctor_schedules s
+               LEFT JOIN doctors d ON s.doctor_id = d.id
+               WHERE 1=1`;
+    const params = [];
+    
+    if (doctorId) {
+      sql += ' AND s.doctor_id = ?';
+      params.push(doctorId);
+    }
+    
+    if (startDate) {
+      sql += ' AND s.schedule_date >= ?';
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      sql += ' AND s.schedule_date <= ?';
+      params.push(endDate);
+    }
+    
+    // 如果没有指定日期范围，默认只查询未来的号源
+    if (!startDate && !endDate) {
+      sql += ' AND s.schedule_date >= CURDATE()';
+    }
+    
+    sql += ' ORDER BY s.schedule_date, s.doctor_id, s.period';
+    
+    const [schedules] = await pool.query(sql, params);
+    
+    // 如果指定了医生和日期范围，将上午和下午的号源合并到同一行
+    if (doctorId && startDate && endDate) {
+      const mergedSchedules = [];
+      const dateMap = new Map();
+      
+      schedules.forEach(schedule => {
+        const date = schedule.schedule_date;
+        if (!dateMap.has(date)) {
+          dateMap.set(date, {
+            date: date,
+            morningSlots: 0,
+            afternoonSlots: 0,
+            morningId: null,
+            afternoonId: null
+          });
+        }
+        
+        const item = dateMap.get(date);
+        if (schedule.period === '上午') {
+          item.morningSlots = schedule.total_slots;
+          item.morningId = schedule.id;
+        } else if (schedule.period === '下午') {
+          item.afternoonSlots = schedule.total_slots;
+          item.afternoonId = schedule.id;
+        }
+      });
+      
+      // 生成完整的日期范围（包括没有号源的日期）
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dateStr = new Date(d).toISOString().split('T')[0];
+        
+        if (dateMap.has(dateStr)) {
+          const item = dateMap.get(dateStr);
+          mergedSchedules.push({
+            id: item.morningId || item.afternoonId,
+            date: dateStr,
+            morningSlots: item.morningSlots,
+            afternoonSlots: item.afternoonSlots
+          });
+        } else {
+          // 没有号源的日期，返回0
+          mergedSchedules.push({
+            id: null,
+            date: dateStr,
+            morningSlots: 0,
+            afternoonSlots: 0
+          });
+        }
+      }
+      
+      return res.json(mergedSchedules);
+    }
     
     res.json(schedules);
   } catch (error) {
     console.error('Failed to load schedules', error);
     res.status(500).json({ message: 'Failed to load schedules' });
+  }
+});
+
+// 管理后台：更新单个号源
+app.put('/api/admin/schedules/:id', async (req, res) => {
+  try {
+    const scheduleId = req.params.id;
+    const { morningSlots, afternoonSlots } = req.body;
+    
+    const updates = [];
+    const params = [];
+    
+    if (morningSlots !== undefined) {
+      updates.push('total_slots = ?', 'remaining_slots = ?');
+      params.push(morningSlots, morningSlots);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'No fields to update' });
+    }
+    
+    params.push(scheduleId);
+    
+    await pool.query(
+      `UPDATE doctor_schedules SET ${updates.join(', ')} WHERE id = ?`,
+      params
+    );
+    
+    res.json({ success: true, message: 'Schedule updated successfully' });
+  } catch (error) {
+    console.error('Failed to update schedule', error);
+    res.status(500).json({ message: 'Failed to update schedule' });
   }
 });
 
