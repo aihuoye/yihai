@@ -115,6 +115,19 @@
         padding: 24px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       }
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .page-header h1 {
+        margin: 0;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+      }
       h1 {
         margin-bottom: 24px;
         font-size: 24px;
@@ -177,6 +190,91 @@
       }
       .danger:hover {
         background: #e85555;
+      }
+      .table-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        padding: 12px;
+      }
+      .modal.active {
+        display: flex;
+      }
+      .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        width: 520px;
+        max-width: 100%;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .modal-header h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #333;
+      }
+      .modal-close {
+        border: none;
+        background: transparent;
+        font-size: 20px;
+        cursor: pointer;
+        color: #999;
+      }
+      .modal-body form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .modal-body form label {
+        display: flex;
+        flex-direction: column;
+        font-size: 14px;
+        color: #3c4556;
+      }
+      .modal-body form input,
+      .modal-body form textarea {
+        margin-top: 6px;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #d7dce5;
+        font-size: 14px;
+      }
+      .modal-body form textarea {
+        min-height: 80px;
+        grid-column: span 2;
+      }
+      .modal-actions {
+        margin-top: 12px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+      .avatar-modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .avatar-preview-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 12px;
+        border: 1px solid #eef1f5;
+        object-fit: cover;
+        background: #f5f7fb;
       }
       /* 表格样式 */
       table {
@@ -313,29 +411,12 @@
       <!-- 医生基础信息管理页面 -->
       <div class="page active" id="doctor-info-page">
         <div class="container">
-          <h1>医生基础信息管理</h1>
-          <form id="doctorForm">
-            <input type="hidden" name="id" id="doctorId" />
-            <label>姓名<input name="name" required /></label>
-            <label>头衔<input name="title" /></label>
-            <label>所在医院<input name="hospitalName" /></label>
-            <label>科室<input name="departmentName" /></label>
-            <label>挂号费用（元）<input name="registrationFee" type="number" step="0.01" value="10.00" /></label>
-            <label class="avatar-field">
-              <span>头像</span>
-              <div class="avatar-upload">
-                <img id="avatarPreview" class="avatar-preview" src="public-sample-avatar.png" alt="头像预览" />
-                <input type="file" id="avatarInput" accept="image/*" />
-              </div>
-              <input type="hidden" name="avatarImage" id="avatarImage" />
-            </label>
-            <label>擅长<textarea name="expertise"></textarea></label>
-            <label>简介<textarea name="intro"></textarea></label>
-            <div class="actions">
-              <button type="submit" class="primary">保存</button>
-              <button type="button" class="secondary" id="resetBtn">重置</button>
+          <div class="page-header">
+            <h1>医生基础信息管理</h1>
+            <div class="action-buttons">
+              <button class="primary" id="createDoctorBtn">新增医生</button>
             </div>
-          </form>
+          </div>
 
           <table>
             <thead>
@@ -351,6 +432,54 @@
             </thead>
             <tbody id="doctorBody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- 基本信息弹窗 -->
+      <div class="modal" id="basicModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="basicModalTitle">编辑医生信息</h2>
+            <button class="modal-close" data-close="#basicModal">×</button>
+          </div>
+          <div class="modal-body">
+            <form id="basicForm">
+              <input type="hidden" name="id" id="basicDoctorId" />
+              <label>姓名<input name="name" id="basicName" required /></label>
+              <label>头衔<input name="title" id="basicTitle" /></label>
+              <label>所在医院<input name="hospitalName" id="basicHospital" /></label>
+              <label>科室<input name="departmentName" id="basicDept" /></label>
+              <label>挂号费用（元）<input name="registrationFee" id="basicFee" type="number" step="0.01" value="10.00" /></label>
+              <label style="grid-column: span 2;">擅长<textarea name="expertise" id="basicExpertise"></textarea></label>
+              <label style="grid-column: span 2;">简介<textarea name="intro" id="basicIntro"></textarea></label>
+              <div class="modal-actions" style="grid-column: span 2;">
+                <button type="button" class="secondary" data-close="#basicModal">取消</button>
+                <button type="submit" class="primary">保存</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 头像弹窗 -->
+      <div class="modal" id="avatarModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>编辑医生头像</h2>
+            <button class="modal-close" data-close="#avatarModal">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="avatar-modal-body">
+              <img id="avatarModalPreview" class="avatar-preview-large" src="public-sample-avatar.png" alt="头像预览" />
+              <input type="file" id="avatarModalInput" accept="image/*" />
+              <input type="hidden" id="avatarDoctorId" />
+              <input type="hidden" id="avatarImage" />
+              <div class="modal-actions">
+                <button type="button" class="secondary" data-close="#avatarModal">取消</button>
+                <button type="button" class="primary" id="saveAvatarBtn">保存头像</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -443,18 +572,28 @@
       // ==================== 医生基础信息管理 ====================
       const API = '/api';
       const bodyEl = document.getElementById('doctorBody');
-      const form = document.getElementById('doctorForm');
-      const resetBtn = document.getElementById('resetBtn');
-      const avatarInput = document.getElementById('avatarInput');
-      const avatarPreview = document.getElementById('avatarPreview');
-      const avatarImageField = document.getElementById('avatarImage');
       const defaultAvatarSrc = 'public-sample-avatar.png';
+      const createDoctorBtn = document.getElementById('createDoctorBtn');
+      const basicModal = document.getElementById('basicModal');
+      const basicModalTitle = document.getElementById('basicModalTitle');
+      const basicForm = document.getElementById('basicForm');
+      const basicDoctorId = document.getElementById('basicDoctorId');
+      const basicName = document.getElementById('basicName');
+      const basicTitle = document.getElementById('basicTitle');
+      const basicHospital = document.getElementById('basicHospital');
+      const basicDept = document.getElementById('basicDept');
+      const basicFee = document.getElementById('basicFee');
+      const basicExpertise = document.getElementById('basicExpertise');
+      const basicIntro = document.getElementById('basicIntro');
+      const avatarModal = document.getElementById('avatarModal');
+      const avatarModalPreview = document.getElementById('avatarModalPreview');
+      const avatarModalInput = document.getElementById('avatarModalInput');
+      const avatarDoctorId = document.getElementById('avatarDoctorId');
+      const avatarImageField = document.getElementById('avatarImage');
+      const saveAvatarBtn = document.getElementById('saveAvatarBtn');
       let doctors = [];
+      const doctorDetailCache = new Map();
       let avatarDirty = false;
-
-      function setAvatarPreview(src) {
-        avatarPreview.src = src || defaultAvatarSrc;
-      }
 
       function buildAvatarSrc(doctor) {
         if (!doctor || !doctor.id) {
@@ -463,6 +602,21 @@
         // 加随机戳防止缓存
         return `${API}/doctors/${doctor.id}/avatar?t=${Date.now()}`;
       }
+
+      function showModal(modalEl) {
+        modalEl.classList.add('active');
+      }
+
+      function hideModal(modalEl) {
+        modalEl.classList.remove('active');
+      }
+
+      document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = document.querySelector(btn.dataset.close);
+          if (target) hideModal(target);
+        });
+      });
 
       function fetchList() {
         fetch(`${API}/doctors?summary=1`)
@@ -487,7 +641,8 @@
             <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
             <td>¥${doctor.registrationFee || '10.00'}</td>
             <td class="table-actions">
-              <button class="secondary" onclick="editDoctor(${doctor.id})">编辑</button>
+              <button class="secondary" onclick="editDoctor(${doctor.id})">编辑信息</button>
+              <button class="secondary" onclick="editAvatar(${doctor.id})">编辑头像</button>
               <button class="danger" onclick="deleteDoctor(${doctor.id})">删除</button>
             </td>
           </tr>`
@@ -495,27 +650,53 @@
           .join('');
       }
 
-      window.editDoctor = id => {
-        fetch(`${API}/doctors/${id}`)
+      function fetchDoctorDetail(id) {
+        if (doctorDetailCache.has(id)) {
+          return Promise.resolve(doctorDetailCache.get(id));
+        }
+        return fetch(`${API}/doctors/${id}`)
           .then(res => {
-            if (!res.ok) {
-              throw new Error('加载医生信息失败');
-            }
+            if (!res.ok) throw new Error('加载医生信息失败');
             return res.json();
           })
           .then(doctor => {
-            form.doctorId.value = doctor.id;
-            form.name.value = doctor.name;
-            form.title.value = doctor.title || '';
-            form.hospitalName.value = doctor.hospitalName || '';
-            form.departmentName.value = doctor.departmentName || '';
-            form.registrationFee.value = doctor.registrationFee || '10.00';
+            doctorDetailCache.set(id, doctor);
+            return doctor;
+          });
+      }
+
+      function fillBasicForm(doctor) {
+        basicDoctorId.value = doctor?.id || '';
+        basicName.value = doctor?.name || '';
+        basicTitle.value = doctor?.title || '';
+        basicHospital.value = doctor?.hospitalName || '';
+        basicDept.value = doctor?.departmentName || '';
+        basicFee.value = doctor?.registrationFee || '10.00';
+        basicExpertise.value = doctor?.expertise || '';
+        basicIntro.value = doctor?.intro || '';
+      }
+
+      function openBasicModal(doctor, isCreate = false) {
+        fillBasicForm(doctor || null);
+        basicModalTitle.textContent = isCreate ? '新增医生' : '编辑医生信息';
+        showModal(basicModal);
+      }
+
+      window.editDoctor = id => {
+        fetchDoctorDetail(id)
+          .then(doctor => openBasicModal(doctor, false))
+          .catch(() => alert('加载医生信息失败'));
+      };
+
+      window.editAvatar = id => {
+        fetchDoctorDetail(id)
+          .then(doctor => {
+            avatarDoctorId.value = doctor.id;
             avatarDirty = false;
             avatarImageField.value = '';
-            setAvatarPreview(doctor.avatarUrl || buildAvatarSrc(doctor));
-            form.expertise.value = doctor.expertise || '';
-            form.intro.value = doctor.intro || '';
-            avatarInput.value = '';
+            avatarModalInput.value = '';
+            avatarModalPreview.src = doctor.avatarUrl || buildAvatarSrc(doctor);
+            showModal(avatarModal);
           })
           .catch(() => alert('加载医生信息失败'));
       };
@@ -535,17 +716,14 @@
           .catch(() => alert('删除失败'));
       };
 
-      form.addEventListener('submit', e => {
+      createDoctorBtn.addEventListener('click', () => openBasicModal(null, true));
+
+      basicForm.addEventListener('submit', e => {
         e.preventDefault();
-        const formData = new FormData(form);
+        const formData = new FormData(basicForm);
         const payload = Object.fromEntries(formData.entries());
         const method = payload.id ? 'PUT' : 'POST';
         const url = payload.id ? `${API}/admin/doctors/${payload.id}` : `${API}/admin/doctors`;
-
-        // 如果头像未修改，不提交 avatarImage，后端保留原图
-        if (!avatarDirty) {
-          delete payload.avatarImage;
-        }
 
         fetch(url, {
           method,
@@ -555,11 +733,13 @@
           .then(res => res.json())
           .then(result => {
             if (payload.id) {
+              doctorDetailCache.set(result.id, result);
               doctors = doctors.map(item => (item.id === result.id ? result : item));
             } else {
+              doctorDetailCache.set(result.id, result);
               doctors.push(result);
             }
-            resetForm();
+            hideModal(basicModal);
             render();
             updateDoctorSelect();
             alert('保存成功！');
@@ -567,30 +747,62 @@
           .catch(() => alert('保存失败'));
       });
 
-      function resetForm() {
-        form.reset();
-        form.doctorId.value = '';
-        avatarDirty = false;
-        avatarImageField.value = '';
-        setAvatarPreview('');
-        avatarInput.value = '';
-      }
-
-      avatarInput.addEventListener('change', event => {
+      avatarModalInput.addEventListener('change', event => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
           avatarDirty = true;
           avatarImageField.value = e.target.result || '';
-          setAvatarPreview(e.target.result);
+          avatarModalPreview.src = e.target.result;
         };
         reader.readAsDataURL(file);
       });
 
-      resetBtn.addEventListener('click', resetForm);
+      saveAvatarBtn.addEventListener('click', () => {
+        const doctorId = avatarDoctorId.value;
+        if (!doctorId) {
+          alert('医生信息异常');
+          return;
+        }
+        if (!avatarDirty || !avatarImageField.value) {
+          alert('请先选择新的头像');
+          return;
+        }
+
+        fetchDoctorDetail(parseInt(doctorId, 10))
+          .then(detail => {
+            const payload = {
+              name: detail.name,
+              title: detail.title,
+              expertise: detail.expertise,
+              intro: detail.intro,
+              hospitalId: detail.hospitalId,
+              hospitalName: detail.hospitalName,
+              departmentName: detail.departmentName,
+              registrationFee: detail.registrationFee,
+              avatarImage: avatarImageField.value
+            };
+            return fetch(`${API}/admin/doctors/${doctorId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          })
+          .then(res => res.json())
+          .then(result => {
+            doctorDetailCache.set(result.id, result);
+            doctors = doctors.map(item => (item.id === result.id ? result : item));
+            hideModal(avatarModal);
+            render();
+            updateDoctorSelect();
+            alert('头像已更新');
+          })
+          .catch(() => alert('保存头像失败'));
+      });
+
+      // 初始化
       avatarDirty = false;
-      setAvatarPreview('');
       fetchList();
 
       // ==================== 号源管理 ====================
