@@ -450,18 +450,18 @@
       const avatarImageField = document.getElementById('avatarImage');
       const defaultAvatarSrc = 'public-sample-avatar.png';
       let doctors = [];
+      let avatarDirty = false;
 
-      function setAvatar(value) {
-        const next = value || '';
-        avatarImageField.value = next;
-        avatarPreview.src = next || defaultAvatarSrc;
+      function setAvatarPreview(src) {
+        avatarPreview.src = src || defaultAvatarSrc;
       }
 
       function buildAvatarSrc(doctor) {
         if (!doctor || !doctor.id) {
           return defaultAvatarSrc;
         }
-        return `${API}/doctors/${doctor.id}/avatar`;
+        // 加随机戳防止缓存
+        return `${API}/doctors/${doctor.id}/avatar?t=${Date.now()}`;
       }
 
       function fetchList() {
@@ -510,7 +510,9 @@
             form.hospitalName.value = doctor.hospitalName || '';
             form.departmentName.value = doctor.departmentName || '';
             form.registrationFee.value = doctor.registrationFee || '10.00';
-            setAvatar(doctor.avatarImage || '');
+            avatarDirty = false;
+            avatarImageField.value = '';
+            setAvatarPreview(doctor.avatarUrl || buildAvatarSrc(doctor));
             form.expertise.value = doctor.expertise || '';
             form.intro.value = doctor.intro || '';
             avatarInput.value = '';
@@ -539,6 +541,12 @@
         const payload = Object.fromEntries(formData.entries());
         const method = payload.id ? 'PUT' : 'POST';
         const url = payload.id ? `${API}/admin/doctors/${payload.id}` : `${API}/admin/doctors`;
+
+        // 如果头像未修改，不提交 avatarImage，后端保留原图
+        if (!avatarDirty) {
+          delete payload.avatarImage;
+        }
+
         fetch(url, {
           method,
           headers: { 'Content-Type': 'application/json' },
@@ -562,7 +570,9 @@
       function resetForm() {
         form.reset();
         form.doctorId.value = '';
-        setAvatar('');
+        avatarDirty = false;
+        avatarImageField.value = '';
+        setAvatarPreview('');
         avatarInput.value = '';
       }
 
@@ -571,13 +581,16 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
-          setAvatar(e.target.result);
+          avatarDirty = true;
+          avatarImageField.value = e.target.result || '';
+          setAvatarPreview(e.target.result);
         };
         reader.readAsDataURL(file);
       });
 
       resetBtn.addEventListener('click', resetForm);
-      setAvatar('');
+      avatarDirty = false;
+      setAvatarPreview('');
       fetchList();
 
       // ==================== 号源管理 ====================

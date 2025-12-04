@@ -1,8 +1,9 @@
 import base64
 import os
 from datetime import date, datetime, timedelta
+from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiomysql
 from aiomysql.cursors import DictCursor
@@ -12,6 +13,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from PIL import Image
 
 from .wechat_bot import WechatBot
 
@@ -94,6 +96,60 @@ def normalize_avatar(value: Optional[str]) -> Optional[str]:
     ).replace("data:image/jpeg;base64,", "").strip()
 
 
+def compress_image_to_limit(image_bytes: bytes, limit_bytes: int = 100 * 1024) -> bytes:
+    """压缩图片至限定大小，优先降质量，必要时缩放。"""
+    try:
+        image = Image.open(BytesIO(image_bytes))
+    except Exception:
+        return image_bytes
+
+    # 转 RGB，避免保存 PNG 时体积过大
+    if image.mode not in ("RGB", "RGBA"):
+        image = image.convert("RGB")
+
+    # 若像素过大，先缩放到最长边不超过 800px
+    max_side = max(image.size)
+    if max_side > 800:
+        ratio = 800 / float(max_side)
+        new_size = (int(image.size[0] * ratio), int(image.size[1] * ratio))
+        image = image.resize(new_size, Image.LANCZOS)
+
+    quality = 90
+    step = 10
+    min_quality = 40
+    buffer = BytesIO()
+
+    def save_with_quality(q: int) -> Tuple[bytes, int]:
+        buffer.seek(0)
+        buffer.truncate(0)
+        # 使用 JPEG 压缩，忽略 alpha
+        img_to_save = image.convert("RGB")
+        img_to_save.save(buffer, format="JPEG", quality=q, optimize=True)
+        data = buffer.getvalue()
+        return data, len(data)
+
+    data, size = save_with_quality(quality)
+    while size > limit_bytes and quality > min_quality:
+        quality -= step
+        data, size = save_with_quality(quality)
+
+    return data
+
+
+def process_avatar_payload(raw_value: Optional[str]) -> Optional[str]:
+    """归一化并压缩头像 base64，返回压缩后的 base64 字符串。"""
+    normalized = normalize_avatar(raw_value)
+    if not normalized:
+        return None
+    try:
+        decoded = base64.b64decode(normalized, validate=True)
+    except Exception:
+        # 无法解析则直接忽略，避免破坏已有数据
+        return None
+    compressed = compress_image_to_limit(decoded)
+    return base64.b64encode(compressed).decode()
+
+
 def to_avatar_data_uri(value: Any) -> Optional[str]:
     if value is None and not DEFAULT_AVATAR_BASE64:
         return None
@@ -118,7 +174,7 @@ def map_doctor_row(row: Dict[str, Any]) -> Dict[str, Any]:
         "hospitalName": row.get("hospital_name"),
         "departmentName": row.get("department_name"),
         "registrationFee": row.get("registration_fee") or 10.00,
-        "avatarImage": to_avatar_data_uri(row.get("avatar_image")),
+        "avatarUrl": f"/api/doctors/{row.get('id')}/avatar" if row.get("id") else None,
     }
 
 
@@ -209,7 +265,7 @@ async def create_doctor(payload: Dict[str, Any], pool: aiomysql.Pool = Depends(g
     name = payload.get("name")
     if not name:
         raise HTTPException(status_code=400, detail="Doctor name is required")
-    avatar_payload = normalize_avatar(payload.get("avatarImage")) or DEFAULT_AVATAR_BASE64 or None
+    avatar_payload = process_avatar_payload(payload.get("avatarImage")) or DEFAULT_AVATAR_BASE64 or None
     fee = payload.get("registrationFee", 10.00)
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
@@ -238,29 +294,50 @@ async def create_doctor(payload: Dict[str, Any], pool: aiomysql.Pool = Depends(g
 
 @app.put("/api/admin/doctors/{doctor_id}")
 async def update_doctor(doctor_id: int, payload: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
-    avatar_payload = normalize_avatar(payload.get("avatarImage"))
+    avatar_field_present = "avatarImage" in payload
+    avatar_payload = process_avatar_payload(payload.get("avatarImage")) if avatar_field_present else None
     fee = payload.get("registrationFee", 10.00)
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                UPDATE doctors SET name=%s, title=%s, expertise=%s, intro=%s,
-                hospital_id=%s, hospital_name=%s, department_name=%s, avatar_image=%s, registration_fee=%s
-                WHERE id=%s
-                """,
-                [
-                    payload.get("name"),
-                    payload.get("title"),
-                    payload.get("expertise"),
-                    payload.get("intro"),
-                    payload.get("hospitalId"),
-                    payload.get("hospitalName"),
-                    payload.get("departmentName"),
-                    avatar_payload,
-                    fee,
-                    doctor_id,
-                ],
-            )
+            if avatar_field_present:
+                await cur.execute(
+                    """
+                    UPDATE doctors SET name=%s, title=%s, expertise=%s, intro=%s,
+                    hospital_id=%s, hospital_name=%s, department_name=%s, avatar_image=%s, registration_fee=%s
+                    WHERE id=%s
+                    """,
+                    [
+                        payload.get("name"),
+                        payload.get("title"),
+                        payload.get("expertise"),
+                        payload.get("intro"),
+                        payload.get("hospitalId"),
+                        payload.get("hospitalName"),
+                        payload.get("departmentName"),
+                        avatar_payload,
+                        fee,
+                        doctor_id,
+                    ],
+                )
+            else:
+                await cur.execute(
+                    """
+                    UPDATE doctors SET name=%s, title=%s, expertise=%s, intro=%s,
+                    hospital_id=%s, hospital_name=%s, department_name=%s, registration_fee=%s
+                    WHERE id=%s
+                    """,
+                    [
+                        payload.get("name"),
+                        payload.get("title"),
+                        payload.get("expertise"),
+                        payload.get("intro"),
+                        payload.get("hospitalId"),
+                        payload.get("hospitalName"),
+                        payload.get("departmentName"),
+                        fee,
+                        doctor_id,
+                    ],
+                )
             if cur.rowcount == 0:
                 raise HTTPException(status_code=404, detail="Doctor not found")
     row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
