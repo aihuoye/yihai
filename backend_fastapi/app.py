@@ -235,6 +235,17 @@ async def get_doctor_detail(doctor_id: int, pool: aiomysql.Pool = Depends(get_po
     return map_doctor_row(row)
 
 
+@app.post("/api/admin/doctors/getInfo")
+async def admin_get_doctor_info(body: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
+    doctor_id = body.get("doctorId")
+    if not doctor_id:
+        raise HTTPException(status_code=400, detail="doctorId is required")
+    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
+    if not row:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+    return map_doctor_row(row)
+
+
 @app.get("/api/doctors/{doctor_id}/avatar")
 async def get_doctor_avatar(doctor_id: int, pool: aiomysql.Pool = Depends(get_pool)) -> Response:
     row = await fetch_one("SELECT avatar_image FROM doctors WHERE id = %s", [doctor_id], pool)
@@ -343,6 +354,39 @@ async def update_doctor(doctor_id: int, payload: Dict[str, Any], pool: aiomysql.
                         doctor_id,
                     ],
                 )
+    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
+    return map_doctor_row(row)
+
+
+@app.post("/api/admin/doctors/modifyInfo")
+async def admin_modify_doctor_info(body: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
+    doctor_id = body.get("doctorId")
+    if not doctor_id:
+        raise HTTPException(status_code=400, detail="doctorId is required")
+    exists = await fetch_one("SELECT id FROM doctors WHERE id = %s", [doctor_id], pool)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                UPDATE doctors SET name=%s, title=%s, expertise=%s, intro=%s,
+                hospital_id=%s, hospital_name=%s, department_name=%s, registration_fee=%s
+                WHERE id=%s
+                """,
+                [
+                    body.get("name"),
+                    body.get("title"),
+                    body.get("expertise"),
+                    body.get("intro"),
+                    body.get("hospitalId"),
+                    body.get("hospitalName"),
+                    body.get("departmentName"),
+                    body.get("registrationFee", 10.00),
+                    doctor_id,
+                ],
+            )
     row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
     return map_doctor_row(row)
 

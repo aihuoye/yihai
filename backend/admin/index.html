@@ -654,7 +654,11 @@
         if (doctorDetailCache.has(id)) {
           return Promise.resolve(doctorDetailCache.get(id));
         }
-        return fetch(`${API}/doctors/${id}`)
+        return fetch(`${API}/admin/doctors/getInfo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctorId: id })
+        })
           .then(res => {
             if (!res.ok) throw new Error('加载医生信息失败');
             return res.json();
@@ -722,17 +726,21 @@
         e.preventDefault();
         const formData = new FormData(basicForm);
         const payload = Object.fromEntries(formData.entries());
-        const method = payload.id ? 'PUT' : 'POST';
-        const url = payload.id ? `${API}/admin/doctors/${payload.id}` : `${API}/admin/doctors`;
+        const isUpdate = Boolean(payload.id);
+        const url = isUpdate ? `${API}/admin/doctors/modifyInfo` : `${API}/admin/doctors`;
+        if (isUpdate) {
+          payload.doctorId = parseInt(payload.id, 10);
+          delete payload.id;
+        }
 
         fetch(url, {
-          method,
+          method: isUpdate ? 'POST' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
           .then(res => res.json())
           .then(result => {
-            if (payload.id) {
+            if (isUpdate) {
               doctorDetailCache.set(result.id, result);
               doctors = doctors.map(item => (item.id === result.id ? result : item));
             } else {
