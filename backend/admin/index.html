@@ -693,16 +693,24 @@
       };
 
       window.editAvatar = id => {
-        fetchDoctorDetail(id)
-          .then(doctor => {
-            avatarDoctorId.value = doctor.id;
-            avatarDirty = false;
-            avatarImageField.value = '';
-            avatarModalInput.value = '';
-            avatarModalPreview.src = doctor.avatarUrl || buildAvatarSrc(doctor);
+        avatarDoctorId.value = id;
+        avatarDirty = false;
+        avatarImageField.value = '';
+        avatarModalInput.value = '';
+        fetch(`${API}/admin/doctors/getImage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doctorId: id })
+        })
+          .then(res => res.json())
+          .then(data => {
+            avatarModalPreview.src = data.avatarImage || defaultAvatarSrc;
             showModal(avatarModal);
           })
-          .catch(() => alert('加载医生信息失败'));
+          .catch(() => {
+            avatarModalPreview.src = defaultAvatarSrc;
+            showModal(avatarModal);
+          });
       };
 
       window.deleteDoctor = id => {
@@ -778,29 +786,19 @@
           return;
         }
 
-        fetchDoctorDetail(parseInt(doctorId, 10))
-          .then(detail => {
-            const payload = {
-              name: detail.name,
-              title: detail.title,
-              expertise: detail.expertise,
-              intro: detail.intro,
-              hospitalId: detail.hospitalId,
-              hospitalName: detail.hospitalName,
-              departmentName: detail.departmentName,
-              registrationFee: detail.registrationFee,
-              avatarImage: avatarImageField.value
-            };
-            return fetch(`${API}/admin/doctors/${doctorId}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
+        fetch(`${API}/admin/doctors/modifyImage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doctorId: parseInt(doctorId, 10),
+            avatarImage: avatarImageField.value
           })
+        })
           .then(res => res.json())
           .then(result => {
-            doctorDetailCache.set(result.id, result);
-            doctors = doctors.map(item => (item.id === result.id ? result : item));
+            const refreshed = { ...result, avatarUrl: `${API}/doctors/${result.id}/avatar?t=${Date.now()}` };
+            doctorDetailCache.set(result.id, refreshed);
+            doctors = doctors.map(item => (item.id === result.id ? refreshed : item));
             hideModal(avatarModal);
             render();
             updateDoctorSelect();

@@ -415,6 +415,55 @@ async def admin_modify_doctor_info(body: Dict[str, Any], pool: aiomysql.Pool = D
     return map_doctor_row(row)
 
 
+@app.post("/api/admin/doctors/modifyImage")
+async def admin_modify_doctor_image(body: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
+    doctor_id = body.get("doctorId")
+    raw_avatar = body.get("avatarImage")
+    if not doctor_id or not raw_avatar:
+        raise HTTPException(status_code=400, detail="doctorId and avatarImage are required")
+    exists = await fetch_one("SELECT id FROM doctors WHERE id = %s", [doctor_id], pool)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+
+    avatar_payload = process_avatar_payload(raw_avatar)
+    if not avatar_payload:
+        raise HTTPException(status_code=400, detail="Invalid avatar image")
+
+    async with pool.acquire() as conn:
+        async with conn.cursor() as cur:
+            await cur.execute("UPDATE doctors SET avatar_image=%s WHERE id=%s", [avatar_payload, doctor_id])
+
+    row = await fetch_one(
+        """
+        SELECT id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee
+        FROM doctors WHERE id = %s
+        """,
+        [doctor_id],
+        pool,
+    )
+    return map_doctor_row(row)
+
+
+@app.post("/api/admin/doctors/getImage")
+async def admin_get_doctor_image(body: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
+    doctor_id = body.get("doctorId")
+    if not doctor_id:
+        raise HTTPException(status_code=400, detail="doctorId is required")
+    row = await fetch_one("SELECT avatar_image FROM doctors WHERE id = %s", [doctor_id], pool)
+    base = ""
+    if row:
+        value = row.get("avatar_image")
+        if isinstance(value, (bytes, bytearray)):
+            base = base64.b64encode(value).decode()
+        elif isinstance(value, str):
+            base = value.strip()
+    if not base:
+        base = DEFAULT_AVATAR_BASE64
+    data_uri = f"data:image/png;base64,{base}" if base else None
+    return {"avatarImage": data_uri}
+
+
 @app.delete("/api/admin/doctors/{doctor_id}", status_code=204)
 async def delete_doctor(doctor_id: int, pool: aiomysql.Pool = Depends(get_pool)) -> Response:
     async with pool.acquire() as conn:
