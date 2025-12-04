@@ -294,6 +294,11 @@ async def create_doctor(payload: Dict[str, Any], pool: aiomysql.Pool = Depends(g
 
 @app.put("/api/admin/doctors/{doctor_id}")
 async def update_doctor(doctor_id: int, payload: Dict[str, Any], pool: aiomysql.Pool = Depends(get_pool)) -> Dict[str, Any]:
+    # 先确认医生存在，避免因数据未变动导致 rowcount=0 被误判为不存在
+    exists = await fetch_one("SELECT id FROM doctors WHERE id = %s", [doctor_id], pool)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Doctor not found")
+
     avatar_field_present = "avatarImage" in payload
     avatar_payload = process_avatar_payload(payload.get("avatarImage")) if avatar_field_present else None
     fee = payload.get("registrationFee", 10.00)
@@ -338,8 +343,6 @@ async def update_doctor(doctor_id: int, payload: Dict[str, Any], pool: aiomysql.
                         doctor_id,
                     ],
                 )
-            if cur.rowcount == 0:
-                raise HTTPException(status_code=404, detail="Doctor not found")
     row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
     return map_doctor_row(row)
 
