@@ -240,7 +240,15 @@ async def admin_get_doctor_info(body: Dict[str, Any], pool: aiomysql.Pool = Depe
     doctor_id = body.get("doctorId")
     if not doctor_id:
         raise HTTPException(status_code=400, detail="doctorId is required")
-    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
+    row = await fetch_one(
+        """
+        SELECT id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee
+        FROM doctors WHERE id = %s
+        """,
+        [doctor_id],
+        pool,
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Doctor not found")
     return map_doctor_row(row)
