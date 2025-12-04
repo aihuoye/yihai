@@ -403,7 +403,15 @@ async def admin_modify_doctor_info(body: Dict[str, Any], pool: aiomysql.Pool = D
                     doctor_id,
                 ],
             )
-    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
+    row = await fetch_one(
+        """
+        SELECT id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee
+        FROM doctors WHERE id = %s
+        """,
+        [doctor_id],
+        pool,
+    )
     return map_doctor_row(row)
 
 
