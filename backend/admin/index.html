@@ -894,14 +894,20 @@
             <td>${getWeekDay(schedule.date)}</td>
             <td class="schedule-cell">
               <input type="number" class="schedule-input" 
-                data-id="${schedule.id}" 
+                data-id="${schedule.morningId || ''}" 
+                data-period="上午"
+                data-date="${schedule.date}"
+                data-doctor="${schedule.doctorId || ''}"
                 data-field="morningSlots" 
                 value="${schedule.morningSlots}" 
                 min="0" />
             </td>
             <td class="schedule-cell">
               <input type="number" class="schedule-input" 
-                data-id="${schedule.id}" 
+                data-id="${schedule.afternoonId || ''}" 
+                data-period="下午"
+                data-date="${schedule.date}"
+                data-doctor="${schedule.doctorId || ''}"
                 data-field="afternoonSlots" 
                 value="${schedule.afternoonSlots}" 
                 min="0" />
@@ -965,15 +971,30 @@
           const id = input.dataset.id;
           const field = input.dataset.field;
           const value = parseInt(input.value) || 0;
-          
-          const schedule = currentSchedules.find(s => s.id == id);
-          if (schedule && schedule[field] !== value) {
-            let update = updates.find(u => u.id == id);
-            if (!update) {
-              update = { id: parseInt(id) };
-              updates.push(update);
+          const period = input.dataset.period;
+          const date = input.dataset.date;
+          const doctorId = input.dataset.doctor;
+
+          const schedule = currentSchedules.find(s => s.date === date);
+          const originalValue = field === 'morningSlots' ? schedule.morningSlots : schedule.afternoonSlots;
+
+          if (originalValue !== value) {
+            if (id) {
+              // 更新已有号源
+              updates.push({
+                id: parseInt(id, 10),
+                totalSlots: value
+              });
+            } else if (doctorId && period && date) {
+              // 创建不存在的号源
+              updates.push({
+                create: true,
+                doctorId: parseInt(doctorId, 10),
+                scheduleDate: date,
+                period: period,
+                totalSlots: value
+              });
             }
-            update[field] = value;
           }
         });
 
@@ -982,13 +1003,30 @@
           return;
         }
 
-        Promise.all(updates.map(update => 
-          fetch(`${API}/admin/schedules/${update.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(update)
+        Promise.all(
+          updates.map(update => {
+            if (update.create) {
+              return fetch(`${API}/admin/schedules`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  doctorId: update.doctorId,
+                  scheduleDate: update.scheduleDate,
+                  period: update.period,
+                  totalSlots: update.totalSlots
+                })
+              });
+            }
+            return fetch(`${API}/admin/schedules/updateOne`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                scheduleId: update.id,
+                totalSlots: update.totalSlots
+              })
+            });
           })
-        ))
+        )
           .then(() => {
             alert('保存成功！');
             loadSchedules();
