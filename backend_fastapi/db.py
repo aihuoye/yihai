@@ -6,7 +6,7 @@ from aiomysql.cursors import DictCursor
 from fastapi import HTTPException, Request
 
 DB_CONFIG: dict[str, Any] = {
-    "host": os.getenv("DB_HOST", "localhost"),
+    "host": os.getenv("DB_HOST", "127.0.0.1"),
     "user": os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", ""),
     "db": os.getenv("DB_NAME", "medical_points"),

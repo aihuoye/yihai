@@ -585,6 +585,14 @@
       const basicFee = document.getElementById('basicFee');
       const basicExpertise = document.getElementById('basicExpertise');
       const basicIntro = document.getElementById('basicIntro');
+      const basicAvatarInput = document.createElement('input');
+      basicAvatarInput.type = 'file';
+      basicAvatarInput.accept = 'image/*';
+      basicAvatarInput.style.display = 'none';
+      document.body.appendChild(basicAvatarInput);
+      const basicAvatarImageField = document.createElement('input');
+      basicAvatarImageField.type = 'hidden';
+      let basicAvatarDirty = false;
       const avatarModal = document.getElementById('avatarModal');
       const avatarModalPreview = document.getElementById('avatarModalPreview');
       const avatarModalInput = document.getElementById('avatarModalInput');
@@ -619,7 +627,7 @@
       });
 
       function fetchList() {
-        fetch(`${API}/doctors?summary=1`)
+        fetch(`${API}/admin/doctors`)
           .then(res => res.json())
           .then(data => {
             doctors = data;
@@ -641,9 +649,9 @@
             <td>${doctor.hospitalName || ''} ${doctor.departmentName || ''}</td>
             <td>¥${doctor.registrationFee || '10.00'}</td>
             <td class="table-actions">
-              <button class="secondary" onclick="editDoctor(${doctor.id})">编辑信息</button>
-              <button class="secondary" onclick="editAvatar(${doctor.id})">编辑头像</button>
-              <button class="danger" onclick="deleteDoctor(${doctor.id})">删除</button>
+              <button class="secondary" onclick="editDoctor('${doctor.id}')">编辑信息</button>
+              <button class="secondary" onclick="editAvatar('${doctor.id}')">编辑头像</button>
+              <button class="danger" onclick="deleteDoctor('${doctor.id}')">删除</button>
             </td>
           </tr>`
           )
@@ -678,12 +686,45 @@
         basicFee.value = doctor?.registrationFee || '10.00';
         basicExpertise.value = doctor?.expertise || '';
         basicIntro.value = doctor?.intro || '';
+        basicAvatarDirty = false;
+        basicAvatarImageField.value = '';
+        const prev = document.getElementById('basicAvatarPreviewImg');
+        if (prev) {
+          prev.src = (doctor && (doctor.avatarUrl || doctor.avatarImage)) || defaultAvatarSrc;
+        }
       }
 
       function openBasicModal(doctor, isCreate = false) {
         fillBasicForm(doctor || null);
         basicModalTitle.textContent = isCreate ? '新增医生' : '编辑医生信息';
         showModal(basicModal);
+
+        // 头像预览（点击可选择）
+        if (!document.getElementById('basicAvatarPreviewNode')) {
+          const wrap = document.createElement('div');
+          wrap.id = 'basicAvatarPreviewNode';
+          wrap.style.gridColumn = 'span 2';
+          wrap.style.display = 'flex';
+          wrap.style.alignItems = 'center';
+          wrap.style.gap = '12px';
+          const label = document.createElement('span');
+          label.textContent = '头像（点击更换）';
+          const img = document.createElement('img');
+          img.id = 'basicAvatarPreviewImg';
+          img.style.width = '64px';
+          img.style.height = '64px';
+          img.style.borderRadius = '8px';
+          img.style.objectFit = 'cover';
+          img.style.border = '1px solid #eef1f5';
+          wrap.appendChild(label);
+          wrap.appendChild(img);
+          basicForm.appendChild(wrap);
+          img.addEventListener('click', () => basicAvatarInput.click());
+        }
+        const prev = document.getElementById('basicAvatarPreviewImg');
+        if (prev) {
+          prev.src = (doctor && (doctor.avatarUrl || doctor.avatarImage)) || defaultAvatarSrc;
+        }
       }
 
       window.editDoctor = id => {
@@ -737,8 +778,11 @@
         const isUpdate = Boolean(payload.id);
         const url = isUpdate ? `${API}/admin/doctors/modifyInfo` : `${API}/admin/doctors`;
         if (isUpdate) {
-          payload.doctorId = parseInt(payload.id, 10);
+          payload.doctorId = payload.id;
           delete payload.id;
+        }
+        if (basicAvatarDirty && basicAvatarImageField.value) {
+          payload.avatarImage = basicAvatarImageField.value;
         }
 
         fetch(url, {
@@ -790,7 +834,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            doctorId: parseInt(doctorId, 10),
+            doctorId: doctorId,
             avatarImage: avatarImageField.value
           })
         })
@@ -810,6 +854,20 @@
       // 初始化
       avatarDirty = false;
       fetchList();
+
+      // 处理基础信息头像文件选择
+      basicAvatarInput.addEventListener('change', event => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          basicAvatarDirty = true;
+          basicAvatarImageField.value = e.target.result || '';
+          const prev = document.getElementById('basicAvatarPreviewImg');
+          if (prev) prev.src = e.target.result || defaultAvatarSrc;
+        };
+        reader.readAsDataURL(file);
+      });
 
       // ==================== 号源管理 ====================
       const scheduleDoctorSelect = document.getElementById('scheduleDoctor');
@@ -943,7 +1001,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            doctorId: parseInt(doctorId),
+            doctorId: doctorId,
             startDate: startDate,
             endDate: endDate,
             morningSlots: parseInt(morningSlots) || 0,
@@ -989,7 +1047,7 @@
               // 创建不存在的号源
               updates.push({
                 create: true,
-                doctorId: parseInt(doctorId, 10),
+                doctorId: doctorId,
                 scheduleDate: date,
                 period: period,
                 totalSlots: value
