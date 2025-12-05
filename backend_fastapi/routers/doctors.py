@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -11,6 +12,7 @@ from backend_fastapi.utils import (
     map_doctor_row,
     map_doctor_summary_row,
     process_avatar_payload,
+    upload_avatar_to_cos,
 )
 
 router = APIRouter(prefix="/api", tags=["doctors"])
@@ -19,39 +21,48 @@ router = APIRouter(prefix="/api", tags=["doctors"])
 @router.get("/doctors")
 async def get_doctors(
     keyword: Optional[str] = Query(default=None),
-    summary: Optional[int] = Query(default=0),
     pool=Depends(get_pool),
 ) -> List[Dict[str, Any]]:
-    sql = (
-        "SELECT id, name, title, expertise, intro, hospital_id, hospital_name, department_name "
-        "FROM doctors"
-        if summary
-        else "SELECT * FROM doctors"
-    )
+    sql = "SELECT doctor_id, name, title, expertise, intro, hospital_id, hospital_name, department_name, registration_fee, avatar_url FROM doctors"
     params: List[Any] = []
     if keyword:
         sql += " WHERE name LIKE %s OR expertise LIKE %s"
         like_kw = f"%{keyword}%"
         params.extend([like_kw, like_kw])
     rows = await fetch_all(sql, params, pool)
-    mapper = map_doctor_summary_row if summary else map_doctor_row
-    return [mapper(row) for row in rows]
+    return [map_doctor_row(row) for row in rows]
+
+
+@router.get("/admin/doctors")
+async def admin_list_doctors(keyword: Optional[str] = Query(default=None), pool=Depends(get_pool)) -> List[Dict[str, Any]]:
+    sql = "SELECT doctor_id, name, title, expertise, intro, hospital_id, hospital_name, department_name, registration_fee, avatar_url FROM doctors"
+    params: List[Any] = []
+    if keyword:
+        sql += " WHERE name LIKE %s OR expertise LIKE %s"
+        like_kw = f"%{keyword}%"
+        params.extend([like_kw, like_kw])
+    rows = await fetch_all(sql, params, pool)
+    return [map_doctor_row(row) for row in rows]
 
 
 @router.get("/doctors/{doctor_id}")
-async def get_doctor_detail(doctor_id: int, pool=Depends(get_pool)) -> Dict[str, Any]:
-    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [doctor_id], pool)
+async def get_doctor_detail(doctor_id: str, pool=Depends(get_pool)) -> Dict[str, Any]:
+    row = await fetch_one("SELECT * FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
     if not row:
         raise HTTPException(status_code=404, detail="Doctor not found")
     return map_doctor_row(row)
 
 
 @router.get("/doctors/{doctor_id}/avatar")
-async def get_doctor_avatar(doctor_id: int, pool=Depends(get_pool)):
-    row = await fetch_one("SELECT avatar_image FROM doctors WHERE id = %s", [doctor_id], pool)
+async def get_doctor_avatar(doctor_id: str, pool=Depends(get_pool)):
+    row = await fetch_one("SELECT avatar_url FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
     base = ""
     if row:
-        value = row.get("avatar_image")
+        value = row.get("avatar_url")
+        if isinstance(value, str) and value.startswith("http"):
+            from fastapi.responses import RedirectResponse
+
+            return RedirectResponse(value)
         if isinstance(value, (bytes, bytearray)):
             import base64 as b64
 
@@ -81,17 +92,26 @@ async def create_doctor(payload: Dict[str, Any], pool=Depends(get_pool)) -> Dict
     name = payload.get("name")
     if not name:
         raise HTTPException(status_code=400, detail="Doctor name is required")
-    avatar_payload = process_avatar_payload(payload.get("avatarImage")) or DEFAULT_AVATAR_BASE64 or None
+    avatar_payload = None
+    if payload.get("avatarImage"):
+        processed = process_avatar_payload(payload.get("avatarImage"))
+        if processed:
+            try:
+                avatar_payload = upload_avatar_to_cos(processed)
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"上传头像失败: {e}") from e
     fee = payload.get("registrationFee", 10.00)
+    doctor_id = str(uuid.uuid4())
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 """
                 INSERT INTO doctors 
-                (name, title, expertise, intro, hospital_id, hospital_name, department_name, avatar_image, registration_fee)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (doctor_id, name, title, expertise, intro, hospital_id, hospital_name, department_name, avatar_url, registration_fee)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 [
+                    doctor_id,
                     name,
                     payload.get("title", ""),
                     payload.get("expertise", ""),
@@ -103,8 +123,7 @@ async def create_doctor(payload: Dict[str, Any], pool=Depends(get_pool)) -> Dict
                     fee,
                 ],
             )
-            new_id = cur.lastrowid
-    row = await fetch_one("SELECT * FROM doctors WHERE id = %s", [new_id], pool)
+    row = await fetch_one("SELECT * FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
     return map_doctor_row(row)
 
 
@@ -115,9 +134,9 @@ async def admin_get_doctor_info(body: Dict[str, Any], pool=Depends(get_pool)) ->
         raise HTTPException(status_code=400, detail="doctorId is required")
     row = await fetch_one(
         """
-        SELECT id, name, title, expertise, intro,
-               hospital_id, hospital_name, department_name, registration_fee
-        FROM doctors WHERE id = %s
+        SELECT doctor_id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee, avatar_url
+        FROM doctors WHERE doctor_id = %s
         """,
         [doctor_id],
         pool,
@@ -132,7 +151,7 @@ async def admin_modify_doctor_info(body: Dict[str, Any], pool=Depends(get_pool))
     doctor_id = body.get("doctorId")
     if not doctor_id:
         raise HTTPException(status_code=400, detail="doctorId is required")
-    exists = await fetch_one("SELECT id FROM doctors WHERE id = %s", [doctor_id], pool)
+    exists = await fetch_one("SELECT doctor_id FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
     if not exists:
         raise HTTPException(status_code=404, detail="Doctor not found")
 
@@ -142,7 +161,7 @@ async def admin_modify_doctor_info(body: Dict[str, Any], pool=Depends(get_pool))
                 """
                 UPDATE doctors SET name=%s, title=%s, expertise=%s, intro=%s,
                 hospital_id=%s, hospital_name=%s, department_name=%s, registration_fee=%s
-                WHERE id=%s
+                WHERE doctor_id=%s
                 """,
                 [
                     body.get("name"),
@@ -158,9 +177,9 @@ async def admin_modify_doctor_info(body: Dict[str, Any], pool=Depends(get_pool))
             )
     row = await fetch_one(
         """
-        SELECT id, name, title, expertise, intro,
-               hospital_id, hospital_name, department_name, registration_fee
-        FROM doctors WHERE id = %s
+        SELECT doctor_id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee, avatar_url
+        FROM doctors WHERE doctor_id = %s
         """,
         [doctor_id],
         pool,
@@ -174,23 +193,27 @@ async def admin_modify_doctor_image(body: Dict[str, Any], pool=Depends(get_pool)
     raw_avatar = body.get("avatarImage")
     if not doctor_id or not raw_avatar:
         raise HTTPException(status_code=400, detail="doctorId and avatarImage are required")
-    exists = await fetch_one("SELECT id FROM doctors WHERE id = %s", [doctor_id], pool)
+    exists = await fetch_one("SELECT doctor_id FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
     if not exists:
         raise HTTPException(status_code=404, detail="Doctor not found")
 
     avatar_payload = process_avatar_payload(raw_avatar)
     if not avatar_payload:
         raise HTTPException(status_code=400, detail="Invalid avatar image")
+    try:
+        avatar_url = upload_avatar_to_cos(avatar_payload)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"上传头像失败: {e}") from e
 
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
-            await cur.execute("UPDATE doctors SET avatar_image=%s WHERE id=%s", [avatar_payload, doctor_id])
+            await cur.execute("UPDATE doctors SET avatar_url=%s WHERE doctor_id=%s", [avatar_url, doctor_id])
 
     row = await fetch_one(
         """
-        SELECT id, name, title, expertise, intro,
-               hospital_id, hospital_name, department_name, registration_fee
-        FROM doctors WHERE id = %s
+        SELECT doctor_id, name, title, expertise, intro,
+               hospital_id, hospital_name, department_name, registration_fee, avatar_url
+        FROM doctors WHERE doctor_id = %s
         """,
         [doctor_id],
         pool,
@@ -203,15 +226,18 @@ async def admin_get_doctor_image(body: Dict[str, Any], pool=Depends(get_pool)) -
     doctor_id = body.get("doctorId")
     if not doctor_id:
         raise HTTPException(status_code=400, detail="doctorId is required")
-    row = await fetch_one("SELECT avatar_image FROM doctors WHERE id = %s", [doctor_id], pool)
+    row = await fetch_one("SELECT avatar_url FROM doctors WHERE doctor_id = %s", [doctor_id], pool)
+    val = (row or {}).get("avatar_url")
+    if isinstance(val, str) and val.startswith("http"):
+        return {"avatarImage": val}
     base = ""
-    if row:
-        value = row.get("avatar_image")
-        if isinstance(value, (bytes, bytearray)):
-            base = value.decode() if isinstance(value, bytes) else base
-            base = value if isinstance(value, str) else base
-        elif isinstance(value, str):
-            base = value.strip()
+    if val:
+        if isinstance(val, (bytes, bytearray)):
+            import base64 as b64
+
+            base = b64.b64encode(val).decode()
+        elif isinstance(val, str):
+            base = val.strip()
     if not base:
         base = DEFAULT_AVATAR_BASE64
     data_uri = f"data:image/png;base64,{base}" if base else None
@@ -219,10 +245,10 @@ async def admin_get_doctor_image(body: Dict[str, Any], pool=Depends(get_pool)) -
 
 
 @router.delete("/admin/doctors/{doctor_id}", status_code=204)
-async def delete_doctor(doctor_id: int, pool=Depends(get_pool)):
+async def delete_doctor(doctor_id: str, pool=Depends(get_pool)):
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
-            await cur.execute("DELETE FROM doctors WHERE id = %s", [doctor_id])
+            await cur.execute("DELETE FROM doctors WHERE doctor_id = %s", [doctor_id])
             if cur.rowcount == 0:
                 raise HTTPException(status_code=404, detail="Doctor not found")
     return {"success": True}

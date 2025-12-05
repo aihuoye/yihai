@@ -1,4 +1,6 @@
 import base64
+import os
+import uuid
 from datetime import date, datetime
 from io import BytesIO
 from pathlib import Path
@@ -6,10 +8,17 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import aiomysql
 from PIL import Image
+from qcloud_cos import CosConfig, CosS3Client
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 LEGACY_BACKEND_DIR = ROOT_DIR / "backend"
 DEFAULT_AVATAR_PATH = LEGACY_BACKEND_DIR / "public-sample-avatar.png"
+
+COS_BUCKET = os.getenv("COS_BUCKET")
+COS_REGION = os.getenv("COS_REGION")
+COS_SECRET_ID = os.getenv("COS_SECRET_ID")
+COS_SECRET_KEY = os.getenv("COS_SECRET_KEY")
+COS_FOLDER = os.getenv("COS_FOLDER", "avatars")
 
 
 def load_default_avatar() -> str:
@@ -95,8 +104,12 @@ def to_avatar_data_uri(value: Any) -> Optional[str]:
 
 
 def map_doctor_row(row: Dict[str, Any]) -> Dict[str, Any]:
+    avatar_val = row.get("avatar_url") or row.get("avatar_image")
+    avatar_url = None
+    if isinstance(avatar_val, str) and avatar_val.startswith("http"):
+        avatar_url = avatar_val
     return {
-        "id": row.get("id"),
+        "id": row.get("doctor_id") or row.get("id"),
         "name": row.get("name"),
         "title": row.get("title"),
         "expertise": row.get("expertise"),
@@ -105,13 +118,13 @@ def map_doctor_row(row: Dict[str, Any]) -> Dict[str, Any]:
         "hospitalName": row.get("hospital_name"),
         "departmentName": row.get("department_name"),
         "registrationFee": row.get("registration_fee") or 10.00,
-        "avatarUrl": f"/api/doctors/{row.get('id')}/avatar" if row.get("id") else None,
+        "avatarUrl": avatar_url or (f"/api/doctors/{row.get('doctor_id') or row.get('id')}/avatar" if (row.get("doctor_id") or row.get("id")) else None),
     }
 
 
 def map_doctor_summary_row(row: Dict[str, Any]) -> Dict[str, Any]:
     return {
-        "id": row.get("id"),
+        "id": row.get("doctor_id") or row.get("id"),
         "name": row.get("name"),
         "title": row.get("title"),
         "expertise": row.get("expertise"),
@@ -134,3 +147,17 @@ async def fetch_one(sql: str, params: Optional[List[Any]], pool: aiomysql.Pool) 
         async with conn.cursor() as cur:
             await cur.execute(sql, params or [])
             return await cur.fetchone()
+
+
+def upload_avatar_to_cos(base64_data: str) -> str:
+    if not (COS_BUCKET and COS_REGION and COS_SECRET_ID and COS_SECRET_KEY):
+        raise RuntimeError("COS config missing (COS_BUCKET/COS_REGION/COS_SECRET_ID/COS_SECRET_KEY)")
+    decoded = base64.b64decode(base64_data)
+    # 使用压缩后的数据
+    compressed = compress_image_to_limit(decoded)
+    client = CosS3Client(
+        CosConfig(Region=COS_REGION, SecretId=COS_SECRET_ID, SecretKey=COS_SECRET_KEY, Scheme="https")
+    )
+    key = f"{COS_FOLDER.rstrip('/')}/{uuid.uuid4().hex}.jpg"
+    client.put_object(Bucket=COS_BUCKET, Body=compressed, Key=key)
+    return f"https://{COS_BUCKET}.cos.{COS_REGION}.myqcloud.com/{key}"

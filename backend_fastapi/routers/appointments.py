@@ -81,7 +81,7 @@ async def create_appointment(body: Dict[str, Any], pool=Depends(get_pool)) -> Di
 @router.get("/appointments")
 async def list_appointments(
     phone: Optional[str] = Query(default=None),
-    doctorId: Optional[int] = Query(default=None),
+    doctorId: Optional[str] = Query(default=None),
     status: Optional[str] = Query(default=None),
     pool=Depends(get_pool),
 ) -> List[Dict[str, Any]]:

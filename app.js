@@ -32,7 +32,9 @@ App({
   setDoctors(doctors) {
     this.globalData.doctors = doctors.map(doctor => {
       const hasId = doctor && doctor.id;
-      const avatarUrl = hasId ? `${API_BASE_URL}/api/doctors/${doctor.id}/avatar` : DEFAULT_AVATAR;
+      const avatarUrl =
+        doctor.avatarUrl ||
+        (hasId ? `${API_BASE_URL}/api/doctors/${doctor.id}/avatar` : DEFAULT_AVATAR);
       return {
         ...doctor,
         avatarImage: avatarUrl

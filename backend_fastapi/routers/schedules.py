@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api", tags=["schedules"])
 
 @router.get("/doctors/{doctor_id}/schedules")
 async def get_doctor_schedules(
-    doctor_id: int,
+    doctor_id: str,
     startDate: Optional[str] = Query(default=None),
     pool=Depends(get_pool),
 ) -> List[Dict[str, Any]]:
@@ -110,7 +110,7 @@ async def batch_schedules(body: Dict[str, Any], pool=Depends(get_pool)) -> Dict[
 
 @router.get("/admin/schedules")
 async def admin_get_schedules(
-    doctorId: Optional[int] = Query(default=None),
+    doctorId: Optional[str] = Query(default=None),
     startDate: Optional[str] = Query(default=None),
     endDate: Optional[str] = Query(default=None),
     pool=Depends(get_pool),
@@ -118,7 +118,7 @@ async def admin_get_schedules(
     sql = """
         SELECT s.*, d.name as doctor_name, d.hospital_name, d.department_name
         FROM doctor_schedules s
-        LEFT JOIN doctors d ON s.doctor_id = d.id
+        LEFT JOIN doctors d ON s.doctor_id = d.doctor_id
         WHERE 1=1
     """
     params: List[Any] = []

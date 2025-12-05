@@ -1,5 +1,6 @@
 const app = getApp();
 const API_BASE = 'http://localhost:4000/api';
+const { DEFAULT_AVATAR } = require('../../utils/constants');
 
 Page({
   data: {
@@ -54,8 +55,12 @@ Page({
       method: 'GET',
       success: (res) => {
         if (res.statusCode === 200) {
+          const doctor = {
+            ...res.data,
+            avatarImage: res.data.avatarUrl || res.data.avatarImage || DEFAULT_AVATAR
+          };
           this.setData({
-            doctor: res.data
+            doctor
           });
         } else {
           wx.showToast({
