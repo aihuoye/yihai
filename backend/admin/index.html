@@ -699,26 +699,18 @@
         basicModalTitle.textContent = isCreate ? '新增医生' : '编辑医生信息';
         showModal(basicModal);
 
-        // 头像预览（点击可选择）
+        // 头像预览（点击可选择），放在按钮之上
         if (!document.getElementById('basicAvatarPreviewNode')) {
           const wrap = document.createElement('div');
           wrap.id = 'basicAvatarPreviewNode';
-          wrap.style.gridColumn = 'span 2';
-          wrap.style.display = 'flex';
-          wrap.style.alignItems = 'center';
-          wrap.style.gap = '12px';
+          wrap.className = 'avatar-row';
           const label = document.createElement('span');
           label.textContent = '头像（点击更换）';
           const img = document.createElement('img');
           img.id = 'basicAvatarPreviewImg';
-          img.style.width = '64px';
-          img.style.height = '64px';
-          img.style.borderRadius = '8px';
-          img.style.objectFit = 'cover';
-          img.style.border = '1px solid #eef1f5';
           wrap.appendChild(label);
           wrap.appendChild(img);
-          basicForm.appendChild(wrap);
+          basicForm.insertBefore(wrap, basicForm.lastElementChild);
           img.addEventListener('click', () => basicAvatarInput.click());
         }
         const prev = document.getElementById('basicAvatarPreviewImg');
@@ -1097,3 +1089,17 @@
     </script>
   </body>
 </html>
+      .modal-body form .avatar-row {
+        grid-column: span 2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .modal-body form .avatar-row img {
+        width: 64px;
+        height: 64px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid #eef1f5;
+        cursor: pointer;
+      }

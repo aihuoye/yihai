@@ -99,7 +99,10 @@ async def create_doctor(payload: Dict[str, Any], pool=Depends(get_pool)) -> Dict
             try:
                 avatar_payload = upload_avatar_to_cos(processed)
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"上传头像失败: {e}") from e
+                # 如果 COS 未配置或上传失败，允许继续创建医生但头像为空
+                import logging
+                logging.warning(f"Upload avatar failed, skip using default. error={e}")
+                avatar_payload = None
     fee = payload.get("registrationFee", 10.00)
     doctor_id = str(uuid.uuid4())
     async with pool.acquire() as conn:
